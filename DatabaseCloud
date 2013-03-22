@@ -1,3 +1,4 @@
+
 def isLeapYear( year):
       if (year % 400 == 0) :
           return True
@@ -52,16 +53,25 @@ def difference(month1, day1, year1, month2, day2, year2):
 
 
 def arrayofdaysmonthsyears(month1,day1,year1,month2,day2,year2):
-    daysleftinmonth2= daysInMonth(month2, year2) - day2 + 1 #to include start
+    if daysInMonth(month2, year2) == day2:
+          daysleftinmonth2 = daysInMonth(month2, year2) - day2 + 1
+    else:
+          daysleftinmonth2= daysInMonth(month2, year2) - day2 + 2 #to include start and end
     if year1 == year2:
-        monthsinbetween= month1 - month2 - 1
+            if month1 == month2:
+                monthsinbetween = 0
+            else:
+              monthsinbetween= month1 - month2 - 1
     else:
         monthsleftinyear2 = 12 - month2 - 1
         monthsinbetween = monthsleftinyear2 + (12 *(year1 - (year2+1))) + month1
     dayarray = []
     montharray = []
     yeararray= []
-    currentdays = daysleftinmonth2
+    if month2 == month1:
+      currentdays = day1 - day2 + 1
+    else:
+      currentdays = daysleftinmonth2
     currentday = day2
     currentmonth = month2
     currentyear = year2
@@ -89,12 +99,13 @@ def arrayofdaysmonthsyears(month1,day1,year1,month2,day2,year2):
         fullmonths = fullmonths - 1
     daysinday1 = day1
     finaldaytoadd = 1
-    while daysinday1 > 0:
-        dayarray.append(finaldaytoadd)
-        montharray.append(month1)
-        yeararray.append(year1)
-        finaldaytoadd = finaldaytoadd + 1
-        daysinday1 = daysinday1 - 1
+    if month2 != month1 or year1 != year2:
+          while daysinday1 > 0:
+              dayarray.append(finaldaytoadd)
+              montharray.append(month1)
+              yeararray.append(year1)
+              finaldaytoadd = finaldaytoadd + 1
+              daysinday1 = daysinday1 - 1
     return [dayarray, montharray, yeararray]
 
 def arrayofdays(month1,day1,year1,month2,day2,year2):
