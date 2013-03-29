@@ -7,16 +7,24 @@ cursor = connection.cursor()
 
 #Create one table per sensor for light measurement data
 cursor.execute('''CREATE TABLE light1 (weekday string, day int, month int,
-                year int, hour int, minute int, seconds int, light float)''')
+                year int, hour int, minute int, seconds int, light float,
+                altitude float, azimuth float,
+                PRIMARY KEY (day, month, year, hour, minute, seconds))''')
 
 cursor.execute('''CREATE TABLE light2 (weekday string, day int, month int,
-                year int, hour int, minute int, seconds int, light float)''')
+                year int, hour int, minute int, seconds int, light float,
+                altitude float, azimuth float,
+                PRIMARY KEY (day, month, year, hour, minute, seconds))''')
 
 cursor.execute('''CREATE TABLE light3 (weekday string, day int, month int,
-                year int, hour int, minute int, seconds int, light float)''')
+                year int, hour int, minute int, seconds int, light float,
+                altitude float, azimuth float,
+                PRIMARY KEY (day, month, year, hour, minute, seconds))''')
 
 cursor.execute('''CREATE TABLE light4 (weekday string, day int, month int,
-                year int, hour int, minute int, seconds int, light float)''')
+                year int, hour int, minute int, seconds int, light float,
+                altitude float, azimuth float,
+                PRIMARY KEY (day, month, year, hour, minute, seconds))''')
 
 #Create one table for cloud measurement data
 cursor.execute('''CREATE TABLE cloud (timezone string, year int, month int,
