@@ -5,7 +5,6 @@ class py2java:
 import numpy as np
 import scipy as sp
 import urllib2
-#import lxml
 import datetime
 from datetime import datetime,date
 import time
@@ -22,7 +21,7 @@ sensors_dict = {2:"f862a13d-91ee-5696-b2b1-b97d81a47b5b",
 
 sensorID = sensors_dict[sens_no]
 
-
+table = "light" + str(sens_no)
 #start_date=raw_input("Enter the start time in this format YYYY,MM,DD: ")
 #end_date=raw_input("Enter the end time in this format YYYY,MM,DD: ")
 #start_time = raw_input("Enter the start hour, minutes, seconds in this format HH,MM,SS: ")
@@ -65,10 +64,10 @@ def parse(url):
     for count in range(len(getvar)):
         t=float(getvar[count][0])/1000 #time in seconds
         ttb=time.localtime(t)
-        tim=strftime("%a %d %b %Y %H %M %S",ttb) #returns time in string
-        #%a = weekday, %d = day of month, %b = month, %Y = year, %H = hour, %M = minute, %S = seconds
+        tim=strftime("%a %d %m %Y %H %M %S",ttb) #returns time in string
+        #%a = weekday, %d = day of month, %m = month, %Y = year, %H = hour, %M = minute, %S = seconds
         if (count == 0):
-            print(tim) #Wed 21 Nov 2012 16 45 53
+            print(tim) #Wed 21 11 2012 16 45 53
         timestamp.append(tim.split())
         read=str.split((getvar[count][1]),']')
         reading.append(float(read[0])) #appends the light measurement
@@ -92,21 +91,18 @@ def debug(length):
 connection = sqlite3.connect('data.db')
 cursor = connection.cursor()
 
-#Create one table for light measurement data
-#If you created the table previously, comment this out
-#cursor.execute('''CREATE TABLE light (weekday string, day int, month int,
- #   year int, hour int, minute int, seconds int, light float)''')
 
 #Add data from readings and timestamp into light table
 for count in range(len(reading)):
     time = timestamp[count]
     to_db = [time[0], time[1], time[2], time[3], time[4], time[5],
              time[6], reading[count]]
-    cursor.execute('INSERT INTO light VALUES (?,?,?,?,?,?,?,?)',
+    cursor.execute('INSERT INTO ' + table + ' VALUES (?,?,?,?,?,?,?,?)',
                    to_db)
 
 
-
+#Save your changes
+connection.commit()
 
 
 

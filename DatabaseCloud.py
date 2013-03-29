@@ -1,3 +1,9 @@
+import urllib2
+import datetime
+from datetime import datetime
+import numpy as np
+import sqlite3
+
 
 def isLeapYear( year):
       if (year % 400 == 0) :
@@ -117,6 +123,74 @@ def arrayofmonths(month1,day1,year1,month2,day2,year2):
 def arrayofyears(month1,day1,year1,month2,day2,year2):
       return (arraryofdaysmonthsyears(month1,day1,year1,month2,day2,year2))[2]
 
-    
+print "This program draws cloudiness data from wunderground site based on the start date, end date and weather station input by the user"
+print "  "
+startdate=raw_input("Enter the starting year, month and day of the data in YYYY MM DD: " )
+enddate=raw_input("Enter the ending year, month and day of the data in YYYY MM DD: " )
 
-       
+start_date_split = startdate.split()
+end_date_split = enddate.split()
+startyear = int(start_date_split[0])
+endyear = int(end_date_split[0])
+startmonth = int(start_date_split[1])
+endmonth = int(end_date_split[1])
+startday = int(start_date_split[2])
+endday = int(end_date_split[2])
+
+DD = arrayofdays(endmonth,endday,endyear,startmonth,startday,startyear)
+MM = arrayofmonths(endmonth,endday,endyear,startmonth,startday,startyear)
+YYYY = arrayofyears(endmonth,endday,endyear,startmonth,startday,startyear)
+    
+featureinput=raw_input("Enter if you want historical data or hourly data as history: ")
+query=raw_input("Enter the city or the weather station name: ")
+
+#Connect to the database data.db
+connection = sqlite3.connect('data.db')
+cursor = connection.cursor()
+
+"""
+for i in range(len(DD)):
+    YYYYMMDD=YYYY[i]+MM[i]+DD[i]
+    features=featureinput+"_"+str(YYYYMMDD)
+    url="http://api.wunderground.com/api/46c535271ddf6901/"+features+"/q/"+query+".json"
+    #features: history
+    #weather station name: KOAK
+    data=urllib2.urlopen(url).read()
+    getdata=str.split(data)
+    timezone=[]
+    date=[]
+    time=[]
+    condis=[]
+    total=[]
+    for count in range(len(getdata)-35):
+        if getdata[count]=='"tzname":':
+            if getdata[count+1]!='"UTC"':
+                x1=str.split(getdata[count+1],'"')
+                x=x1[1]
+                y1=str.split(getdata[count-3],'"')
+                y2=str.split(getdata[count-1],'"')
+                y=y1[1]+":"+y2[1]+":00"
+                #print y2
+                z1=str.split(getdata[count-9],'"')
+                z2=str.split(getdata[count-7],'"')
+                z3=str.split(getdata[count-5],'"')
+                z=z1[1]+"/"+z2[1]+"/"+z3[1]
+                timezone.append(x)
+                time.append(y)
+                date.append(z)
+                condition=str.split(getdata[count+35],',')
+                if len(condition)>1:
+                    clouds=str.split(condition[1],":")
+                    #print clouds[1]
+                    cloudiness=str.split(clouds[1],'"')
+                    condis.append(cloudiness[1])
+                    to_db = [x, YYYY[i], MM[i], DD[i], y, cloudiness[1]]
+                    cursor.execute('INSERT INTO light VALUES (?,?,?,?,?,?)',
+                       to_db)
+                    save=x+'\t'+str(YYYY[i])+'\t'+str(MM[i])+'\t'+str(DD[i])+'\t'+y+'\t'+cloudiness[1]+'\n'
+                    print(save)
+                    total.append(x+' '+y+' '+z+' '+cloudiness[1])
+"""
+
+#Save your changes
+connection.commit()
