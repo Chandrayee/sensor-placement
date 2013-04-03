@@ -15,24 +15,21 @@ from pytz import timezone
 import math
 import pdb
 
-
 import sqlite3
 from sqlite3 import dbapi2 as sqlite3
 
 #Data Extraction from TEMPERATURE DATA BEST lab
-sens_no=input("Enter the sensor number: ")
+#sens_no=input("Enter the sensor number: ")
 sensors_dict = {2:"f862a13d-91ee-5696-b2b1-b97d81a47b5b",
                 3:"b92ddaee-48de-5f37-82ed-fe1f0922b0e5",
                 4:"8bb0b6a2-971f-54dc-9e19-14424b9a1764"}
 
-sensorID = sensors_dict[sens_no]
+#We need the ID for sensor 1
 
-table = "light" + str(sens_no)
 #start_date=raw_input("Enter the start time in this format YYYY,MM,DD: ")
 #end_date=raw_input("Enter the end time in this format YYYY,MM,DD: ")
 #start_time = raw_input("Enter the start hour, minutes, seconds in this format HH,MM,SS: ")
 #end_time = raw_input ("Enter the end hour, minutes, seconds in this format HH,MM,SS: ")
-
 
 def make_unix_timestamp(date_string, time_string):
     date_string_split = date_string.split(",")
@@ -46,19 +43,14 @@ def make_unix_timestamp(date_string, time_string):
 
 #start = make_unix_timestamp(start_date, start_time)
 #end = make_unix_timestamp(end_date, end_time)
-start = make_unix_timestamp("2012,07,27", "12,15,56")
-end = make_unix_timestamp("2012,08,12", "10,00,26")
-
-url = "http://new.openbms.org/backend/api/prev/uuid/" + sensorID + "?&start=" + start + "&end=" + end +"&limit=100000&"
-
-timestamp=[]
-reading=[]
-
-timest=[]
-temp=[]
-
+#start = make_unix_timestamp("2012,07,27", "12,15,56")
+#end = make_unix_timestamp("2012,08,12", "10,00,26")
 
 def parse(url):
+    timestamp=[]
+    reading=[]
+    timest=[]
+    temp=[]
     webpage = urllib2.urlopen(url).read()
     page = str.split(webpage, '[')
     for count in range(len(page)):
@@ -80,8 +72,7 @@ def parse(url):
         if (count == 0):
             print(float(read[0])) #37.851485925
         count+=1
-
-parse(url)
+    return [timestamp, reading]
 
 # For debugging purposes:
 def debug(length):
@@ -91,7 +82,6 @@ def debug(length):
         print("(" + str(reading[count]) + ",")
         print(timestamp[count])
         print(")")
-
 
 #Create a database data.db and connect to it
 connection = sqlite3.connect('data.db')
@@ -206,13 +196,38 @@ def getSunpos(lat, lon, year, month, day, hour, minute, seconds):
     return [str(eldeg), str(azdeg)]
     #newline=datentime[0]+'\t'+datentime[1]+'\t'+datentime[2]+'\t'+datentime[3]+'\t'+datentime[4]+'\t'+datentime[5]+'\t'+str(eldeg)+'\t'+str(azdeg)+'\n'
 
-#Add data from readings and timestamp into light table
-for count in range(len(reading)):
-    time = timestamp[count]
-    sunpos = getSunpos(lat, lon, time[3], time[2], time[1], time[4], time[5], time[6])
-    to_db = [time[0], time[1], time[2], time[3], time[4], time[5],
+def createData(sens_no, start, end):
+    sensorID = sensors_dict[sens_no]
+    table = "light" + str(sens_no)
+    url = "http://new.openbms.org/backend/api/prev/uuid/" + sensorID + "?&start=" + start + "&end=" + end + "&limit=100000&"
+    timestamp, reading = parse(url)
+    #Add data from readings and timestamp into light table
+    for count in range(len(reading)):
+        time = timestamp[count]
+        sunpos = getSunpos(lat, lon, time[3], time[2], time[1], time[4], time[5], time[6])
+        to_db = [time[0], time[1], time[2], time[3], time[4], time[5],
              time[6], reading[count], sunpos[0], sunpos[1]]
-    cursor.execute('INSERT OR IGNORE INTO ' + table + ' VALUES (?,?,?,?,?,?,?,?,?,?)',
+        cursor.execute('INSERT OR IGNORE INTO ' + table + ' VALUES (?,?,?,?,?,?,?,?,?,?)',
+                   to_db)
+
+#createData(2, "1349478489000", "1337587200000")
+#createData(3, "1353545153000", "1367587200000")
+#createData(4, "1353545237000", "1367587200000")
+
+def updateData(sens_no):
+    sensorID = sensors_dict[sens_no]
+    table = "light" + str(sens_no)
+    #start = time of last row in the table
+    end = str(int(time.time()))[0:13]
+    url = "http://new.openbms.org/backend/api/prev/uuid/" + sensorID + "?&start=" + start + "&end=" + end + "&limit=100000&"
+    timestamp, reading = parse(url)
+    #Add data from readings and timestamp into light table
+    for count in range(len(reading)):
+        time = timestamp[count]
+        sunpos = getSunpos(lat, lon, time[3], time[2], time[1], time[4], time[5], time[6])
+        to_db = [time[0], time[1], time[2], time[3], time[4], time[5],
+             time[6], reading[count], sunpos[0], sunpos[1]]
+        cursor.execute('INSERT OR IGNORE INTO ' + table + ' VALUES (?,?,?,?,?,?,?,?,?,?)',
                    to_db)
 
 #Save your changes
