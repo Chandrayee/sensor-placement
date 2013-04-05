@@ -25,3 +25,6 @@ cursor.execute('SELECT * FROM cloudiness WHERE level>3.3')
 print cursor.fetchone() #Prints first row of the table
 print cursor.fetchmany(5) #Prints 5 rows of the table in a list format
 print cursor.fetchall() #Prints every row of the table
+
+#Close the database connection
+connection.close()

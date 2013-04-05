@@ -1,3 +1,15 @@
+"""Code for extracting data from smap url's and adding the data to the
+light tables of data.db. In addition to adding the raw data from the smap
+url's, we also create sunposition data (altitude and azimuth) and add the
+values as the 10th and 11th attributes of a light table.
+
+The light tables (light1, light2, light3, etc.) have the following 11
+attributes (column names and types):
+
+unixtime float, weekday string, day int, month int, year int, hour int,
+    minute int, seconds int,light float, altitude float, azimuth float
+"""
+
 import numpy as np
 from numpy import vstack
 import scipy as sp
@@ -18,39 +30,33 @@ import pdb
 import sqlite3
 from sqlite3 import dbapi2 as sqlite3
 
-#Data Extraction from TEMPERATURE DATA BEST lab
-#sens_no=input("Enter the sensor number: ")
+#Dictionary that maps each BEST lab sensor number to its sensor ID.
 sensors_dict = {2:"f862a13d-91ee-5696-b2b1-b97d81a47b5b",
                 3:"b92ddaee-48de-5f37-82ed-fe1f0922b0e5",
                 4:"8bb0b6a2-971f-54dc-9e19-14424b9a1764"}
 
-#We need the ID for sensor 1
-
-#start_date=raw_input("Enter the start time in this format YYYY,MM,DD: ")
-#end_date=raw_input("Enter the end time in this format YYYY,MM,DD: ")
-#start_time = raw_input("Enter the start hour, minutes, seconds in this format HH,MM,SS: ")
-#end_time = raw_input ("Enter the end hour, minutes, seconds in this format HH,MM,SS: ")
-
 def make_unix_timestamp(date_string, time_string):
+    """Returns the unix time stamp of a given date, date_string (format
+    YYYY,MM,DD), and a given time, time_string (format HH,MM,SS)."""
     date_string_split = date_string.split(",")
-    current_date = date(int(date_string_split[0]), int(date_string_split[1]),int(date_string_split[2]))
+    current_date = date(int(date_string_split[0]),
+                        int(date_string_split[1]),
+                        int(date_string_split[2]))
     current_unix = mktime(current_date.timetuple())
     time_string_split = time_string.split(",")
-    current_time = 1000*(3600*int(time_string_split[0]) + 60*int(time_string_split[1]) +
+    current_time = 1000*(3600*int(time_string_split[0]) +
+                    60*int(time_string_split[1]) +
                     int(time_string_split[2]))
     return str(int(current_unix + current_time))
 
-
-#start = make_unix_timestamp(start_date, start_time)
-#end = make_unix_timestamp(end_date, end_time)
-#start = make_unix_timestamp("2012,07,27", "12,15,56")
-#end = make_unix_timestamp("2012,08,12", "10,00,26")
-
 def parse(url):
+    """Returns a list of the timestamps, readings, and unixtimes of each
+    entry from the raw data provided by the input url."""
     timestamp=[]
     reading=[]
     timest=[]
     temp=[]
+    unixtime=[]
     webpage = urllib2.urlopen(url).read()
     page = str.split(webpage, '[')
     for count in range(len(page)):
@@ -60,42 +66,28 @@ def parse(url):
     print temp[1]
     getvar = temp[3:]
     for count in range(len(getvar)):
-        t=float(getvar[count][0])/1000 #time in seconds
+        #Converting time from milliseconds to seconds
+        t=float(getvar[count][0])/1000
+        #Appends the unix timestamp
+        unixtime.append(getvar[count][0])
         ttb=time.localtime(t)
-        tim=strftime("%a %d %m %Y %H %M %S",ttb) #returns time in string
-        #%a = weekday, %d = day of month, %m = month, %Y = year, %H = hour, %M = minute, %S = seconds
+        #Returns time in string format: "Wed 21 11 2012 16 45 53"
+        tim=strftime("%a %d %m %Y %H %M %S",ttb)
+        #For debugging:
         if (count == 0):
-            print(tim) #Wed 21 11 2012 16 45 53
+            print(tim)
+        #Appends the date and time information
         timestamp.append(tim.split())
         read=str.split((getvar[count][1]),']')
-        reading.append(float(read[0])) #appends the light measurement
+        #Appends the light measurement
+        reading.append(float(read[0]))
+        #For debugging:
         if (count == 0):
             print(float(read[0])) #37.851485925
         count+=1
-    return [timestamp, reading]
+    return [timestamp, reading, unixtime]
 
-# For debugging purposes:
-def debug(length):
-    print("Length of readings: " + str(len(reading)))
-    print("Length of readings: " + str(len(timestamp)))
-    for count in range(length):
-        print("(" + str(reading[count]) + ",")
-        print(timestamp[count])
-        print(")")
-
-#Create a database data.db and connect to it
-connection = sqlite3.connect('data.db')
-cursor = connection.cursor()
-
-#lat=raw_input("enter the latitude of the place (enter in degrees, minutes and seconds, north is positive):   ")
-#lon=raw_input("enter the longitude of the place (put W for west and E for east at the end of the longitude):   ")
-#timezon=raw_input("enter the name of the place as within quotes as country/city with spaces replaced by underscore:   ")
-
-lat = "37 52 27.447"
-lon = "122 15 33.3864 W"
-timezon = "US/Pacific"
-
-def getSunpos(lat, lon, year, month, day, hour, minute, seconds):
+def getSunpos(lat, lon, timezon, year, month, day, hour, minute, seconds):
     splat=str.split(lat)
     splon=str.split(lon)
     latitude=float(splat[0])+float(splat[1])/60+float(splat[2])/3600
@@ -196,43 +188,81 @@ def getSunpos(lat, lon, year, month, day, hour, minute, seconds):
     return [str(eldeg), str(azdeg)]
     #newline=datentime[0]+'\t'+datentime[1]+'\t'+datentime[2]+'\t'+datentime[3]+'\t'+datentime[4]+'\t'+datentime[5]+'\t'+str(eldeg)+'\t'+str(azdeg)+'\n'
 
-def createData(sens_no, start, end):
+#lat=raw_input("enter the latitude of the place (enter in degrees, minutes and seconds, north is positive):   ")
+#lon=raw_input("enter the longitude of the place (put W for west and E for east at the end of the longitude):   ")
+#timezon=raw_input("enter the name of the place as within quotes as country/city with spaces replaced by underscore:   ")
+
+def createData(sens_no, start, end, lat = "37 52 27.447",
+               lon = "122 15 33.3864 W", timezon = "US/Pacific"):
+    """This function adds data for BEST lab sensor SENS_NO into its
+    respective light table starting from unix timestamp (in milliseconds)
+    START and ending at unix timestamp (in milliseconds) END. It generates
+    sunposition data using the given LAT, LON, and TIMEZON. If these are
+    not specified, createData resorts to the default LAT, LON, and TIMEZON
+    values, which are the values for the BEST Lab in Berkeley, CA.
+    """
+    connection = sqlite3.connect('data.db')
+    cursor = connection.cursor()
     sensorID = sensors_dict[sens_no]
     table = "light" + str(sens_no)
-    url = "http://new.openbms.org/backend/api/prev/uuid/" + sensorID + "?&start=" + start + "&end=" + end + "&limit=100000&"
-    timestamp, reading = parse(url)
-    #Add data from readings and timestamp into light table
+    url = "http://new.openbms.org/backend/api/prev/uuid/" + sensorID +\
+          "?&start=" + start + "&end=" + end + "&limit=100000&"
+    timestamp, reading, unixtime = parse(url)
+    #Add data from reading, timestamp, and unixtime into light table
     for count in range(len(reading)):
         time = timestamp[count]
-        sunpos = getSunpos(lat, lon, time[3], time[2], time[1], time[4], time[5], time[6])
-        to_db = [time[0], time[1], time[2], time[3], time[4], time[5],
-             time[6], reading[count], sunpos[0], sunpos[1]]
-        cursor.execute('INSERT OR IGNORE INTO ' + table + ' VALUES (?,?,?,?,?,?,?,?,?,?)',
-                   to_db)
+        sunpos = getSunpos(lat, lon, timezon, time[3], time[2],
+                           time[1], time[4], time[5], time[6])
+        to_db = [unixtime[count], time[0], time[1], time[2], time[3],
+                 time[4], time[5],time[6], reading[count], sunpos[0],
+                 sunpos[1]]
+        cursor.execute('INSERT OR IGNORE INTO ' + table
+                       + ' VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+                       to_db)
+    connection.commit()
 
-#createData(2, "1349478489000", "1337587200000")
-#createData(3, "1353545153000", "1367587200000")
-#createData(4, "1353545237000", "1367587200000")
+def createData(lat = "37 52 27.447", lon = "122 15 33.3864 W",
+               timezon = "US/Pacific"):
+    """Adds all the data starting from the beginning of data collection
+    until the current time for BEST lab sensors 2, 3, and 4."""
+    connection = sqlite3.connect('data.db')
+    cursor = connection.cursor()
+    createData(2, "1349478489000", str(int(time.time())*1000), lat, lon, timezon)
+    createData(3, "1353545153000", str(int(time.time())*1000), lat, lon, timezon)
+    createData(4, "1353545237000", str(int(time.time())*1000), lat, lon, timezon)
+    #Save your changes
+    connection.commit()
 
-def updateData(sens_no):
+def updateData(sens_no, lat = "37 52 27.447", lon = "122 15 33.3864 W",
+               timezon = "US/Pacific"):
+    """Updates all the data starting from the time of the latest entry of each time table until the current time for
+    BEST lab sensor number SENS_NO. It generates sunposition data using the given LAT, LON, and TIMEZON. If these are not specified, createData resorts to the default LAT, LON, and TIMEZON
+    values, which are the values for the BEST Lab in Berkeley, CA."""
+    connection = sqlite3.connect('data.db')
+    cursor = connection.cursor()
     sensorID = sensors_dict[sens_no]
     table = "light" + str(sens_no)
-    #start = time of last row in the table
-    end = str(int(time.time()))[0:13]
-    url = "http://new.openbms.org/backend/api/prev/uuid/" + sensorID + "?&start=" + start + "&end=" + end + "&limit=100000&"
-    timestamp, reading = parse(url)
+    cursor.execute('SELECT MAX(unixtime) FROM ' + table)
+    start = int(cursor.fetchone()[0]) #1365197540000L
+    end = int(time.time())*1000 #1365198007000L
+    limit = (end - start)/300000 #1L
+    print("limit is:" + str(limit))
+    print("Start is:" + str(start))
+    print("End is:" + str(end))
+    url = "http://new.openbms.org/backend/api/prev/uuid/" + sensorID + "?&start=" + str(start) + "&end=" + str(end) + "&limit=" + str(limit) + "&"
+    timestamp, reading, unixtime = parse(url)
+    print(len(reading))
     #Add data from readings and timestamp into light table
     for count in range(len(reading)):
-        time = timestamp[count]
-        sunpos = getSunpos(lat, lon, time[3], time[2], time[1], time[4], time[5], time[6])
-        to_db = [time[0], time[1], time[2], time[3], time[4], time[5],
-             time[6], reading[count], sunpos[0], sunpos[1]]
-        cursor.execute('INSERT OR IGNORE INTO ' + table + ' VALUES (?,?,?,?,?,?,?,?,?,?)',
+        t = timestamp[count]
+        sunpos = getSunpos(lat, lon, timezon, t[3], t[2], t[1], t[4], t[5], t[6])
+        to_db = [unixtime[count], t[0], t[1], t[2], t[3], t[4], t[5],
+                 t[6], reading[count], sunpos[0], sunpos[1]]
+        cursor.execute('INSERT OR IGNORE into ' + table + ' VALUES (?,?,?,?,?,?,?,?,?,?,?)',
                    to_db)
-
-#Save your changes
-connection.commit()
-
+    #Save your changes
+    connection.commit()
+    
 
 
 
