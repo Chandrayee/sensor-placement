@@ -66,9 +66,7 @@ def parse(url):
     print temp[1]
     getvar = temp[3:]
     for count in range(len(getvar)):
-        #Converting time from milliseconds to seconds
         t=float(getvar[count][0])/1000
-        #Appends the unix timestamp
         unixtime.append(getvar[count][0])
         ttb=time.localtime(t)
         #Returns time in string format: "Wed 21 11 2012 16 45 53"
@@ -76,10 +74,8 @@ def parse(url):
         #For debugging:
         if (count == 0):
             print(tim)
-        #Appends the date and time information
         timestamp.append(tim.split())
         read=str.split((getvar[count][1]),']')
-        #Appends the light measurement
         reading.append(float(read[0]))
         #For debugging:
         if (count == 0):
@@ -87,110 +83,118 @@ def parse(url):
         count+=1
     return [timestamp, reading, unixtime]
 
+lat = "37 52 27.447"
+lon = "122 15 33.3864 W"
+timezon = "US/Pacific"
+
 def getSunpos(lat, lon, timezon, year, month, day, hour, minute, seconds):
-    splat=str.split(lat)
-    splon=str.split(lon)
-    latitude=float(splat[0])+float(splat[1])/60+float(splat[2])/3600
-    if splon[3]=='W': # ASK ABOUT THIS
-        longitude=-(float(splon[0])+float(splon[1])/60+float(splon[2])/3600)
+    """Returns a list containing the altitude and the azimuth given the
+    latitude LAT, longitude LON, timezone TIMEZON, year YEAR, month MONTH,
+    minute MINUTE, and seconds SECONDS."""
+    splat = str.split(lat)
+    splon = str.split(lon)
+    latitude = float(splat[0]) + float(splat[1])/60 + float(splat[2])/3600
+    if splon[3] == 'W':
+        longitude = -(float(splon[0]) + float(splon[1])/60 +
+                      float(splon[2])/3600)
     else:
-        longitude=float(splon[0])+float(splon[1])/60+float(splon[2])/3600
+        longitude = float(splon[0]) + float(splon[1])/60 +\
+        float(splon[2])/3600
     local = pytz.timezone(timezon)
-    loctime = str(year) + '-' + str(month) + '-' + str(day) + ' ' + str(hour) + ':' + str(minute) + ':' + str(seconds)
-    naive = datetime.strptime (loctime, "%Y-%m-%d %H:%M:%S")
+    loctime = str(year) + '-' + str(month) + '-' + str(day) + ' ' +\
+                str(hour) + ':' + str(minute) + ':' + str(seconds)
+    naive = datetime.strptime(loctime, "%Y-%m-%d %H:%M:%S")
     local_dt = local.localize(naive, is_dst=None)
-    utc_dt = local_dt.astimezone (pytz.utc)
-    utc_dt.strftime ("%Y-%m-%d %H:%M:%S")
-    utcsplit=str.split(str(utc_dt))
-    utcdt=str.split(utcsplit[0],'-')
-    utctime=str.split(utcsplit[1],'+')
-    utctimefinal=str.split(utctime[0],':')
-    year=utcdt[0]
-    month=utcdt[1]
-    day=utcdt[2]
-    hour=utctimefinal[0]
-    minute=utctimefinal[1]
-    second=utctimefinal[2]
+    utc_dt = local_dt.astimezone(pytz.utc)
+    utc_dt.strftime("%Y-%m-%d %H:%M:%S")
+    utcsplit = str.split(str(utc_dt))
+    utcdt = str.split(utcsplit[0],'-')
+    utctime = str.split(utcsplit[1],'+')
+    utctimefinal = str.split(utctime[0],':')
+    year = utcdt[0]
+    month = utcdt[1]
+    day = utcdt[2]
+    hour = utctimefinal[0]
+    minute = utctimefinal[1]
+    second = utctimefinal[2]
     #+1 for e and -1 for w for dst
-    houronly=float(hour)+float(minute)/60+float(second)/3600
-    delta=int(year)-1949
-    leap=int(delta/4)
-    doy=[31,28,31,30,31,30,31,31,30,31,30,31]
-    if int(year)%4==0:
-        doy[1]=29
-    dayofyear=sum(doy[0:(int(month)-1)])+int(day)
-    jd=2432916.5+delta*365+dayofyear+leap+houronly/24
-    actime=jd-2451545
-    pi=3.1415926535897931
-    rad=pi/180
+    houronly = float(hour) + float(minute)/60 + float(second)/3600
+    delta = int(year)-1949
+    leap = int(delta/4)
+    doy = [31,28,31,30,31,30,31,31,30,31,30,31]
+    if int(year)%4 == 0:
+        doy[1] = 29
+    dayofyear = sum(doy[0:(int(month)-1)]) + int(day)
+    jd = 2432916.5 + delta*365 + dayofyear + leap + houronly/24
+    actime = jd - 2451545
+    pi = 3.1415926535897931
+    rad = pi/180
     
     #mean longitude in degrees between 0 and 360
-    L=(280.46+0.9856474*actime)%360
-    if L<0:
+    L = (280.46 + 0.9856474*actime)%360
+    if L < 0:
         L+=360
     #mean anomaly in radians
-    g=(357.528+0.9856003*actime)%360
-    if g<0:
+    g = (357.528 + 0.9856003*actime) % 360
+    if g < 0:
         g+=360
-    g=g*rad
+    g = g*rad
     #ecliptic longitude in radians
-    eclong=(L+1.915*math.sin(g)+0.02*math.sin(2*g))%360
-    if eclong<0:
+    eclong = (L + 1.915*math.sin(g) + 0.02*math.sin(2*g)) % 360
+    if eclong < 0:
         eclong+=360
-    eclong=eclong*rad
+    eclong = eclong*rad
     #ecliptic obliquity in radians
-    ep=(23.439-0.0000004*actime)*rad
+    ep = (23.439 - 0.0000004*actime)*rad
     #get right ascension in radians between 0 and 2 pi
-    num=math.cos(ep)*math.sin(eclong)
-    den=math.cos(eclong)
-    ra=math.atan(num/den)
-    if den<0:
+    num = math.cos(ep)*math.sin(eclong)
+    den = math.cos(eclong)
+    ra = math.atan(num/den)
+    if den < 0:
         ra+=pi
-    elif den>0 and num<0:
+    elif den > 0 and num < 0:
         ra+=2*pi
     #get declination in radians
-    dec=math.asin(math.sin(ep)*math.sin(eclong))
+    dec = math.asin(math.sin(ep)*math.sin(eclong))
     #get greenwich mean sidereal time
-    gmst=(6.697375 + 0.0657098242*actime+houronly)%24
-    if gmst<0:
+    gmst = (6.697375 + 0.0657098242*actime + houronly) % 24
+    if gmst < 0:
         gmst+=24
     #get local mean sidereal time in radians
-    lmst=(gmst+longitude/15)%24
-    if lmst<0:
+    lmst=(gmst + longitude/15) % 24
+    if lmst < 0:
         lmst+=24
-    lmst=lmst*15*rad
+    lmst = lmst*15*rad
     #get hour angle in radians between -pi and pi
-    ha=lmst-ra
-    if ha<-pi:
+    ha = lmst - ra
+    if ha < -pi:
         ha+=2*pi
-    elif ha>pi:
-        ha=ha-2*pi
+    elif ha > pi:
+        ha = ha - 2*pi
     #change latitude to radians
-    latrad=latitude*rad
+    latrad = latitude*rad
     #calculate elevation and azimuth in degrees
-    el=math.asin(math.sin(dec)*math.sin(latrad)+math.cos(dec)*math.cos(latrad)*math.cos(ha))
+    el=math.asin(math.sin(dec)*math.sin(latrad) +
+                 math.cos(dec)*math.cos(latrad)*math.cos(ha))
     az=math.asin(-math.cos(dec)*math.sin(ha)/math.cos(el*rad))
     #approximation for azimuth
     #if az==90, elcrit=math.degrees(math.asin(math.sin(dec)/math.sin(latitude)))
-    if math.sin(dec)-math.sin(el)/math.sin(latrad)>=0 and math.sin(az)<0:
+    if math.sin(dec) - math.sin(el)/math.sin(latrad) >= 0 and\
+        math.sin(az) < 0:
         az+=2*pi
-    elif math.sin(dec)-math.sin(el)/math.sin(latrad)<0:
-        az=pi-az
-    eldeg=round(math.degrees(el),2)
-    azdeg=round(math.degrees(az),2)
-    if eldeg>-0.56:
-        refrac = 3.51561*(0.1594+0.0196*eldeg+0.00002*math.pow(eldeg,2))/(1+0.505*eldeg+0.0845*math.pow(eldeg,2))
+    elif math.sin(dec) - math.sin(el)/math.sin(latrad) < 0:
+        az = pi-az
+    eldeg = round(math.degrees(el),2)
+    azdeg = round(math.degrees(az),2)
+    if eldeg > -0.56:
+        refrac = 3.51561*(0.1594 + 0.0196*eldeg + 0.00002*math.pow(eldeg,2))\
+                    /(1 + 0.505*eldeg + 0.0845*math.pow(eldeg,2))
     else:
         refrac = 0.56
     eldeg=eldeg+refrac
     #print eldeg,azdeg
     #data is saved for future reference
     return [str(eldeg), str(azdeg)]
-    #newline=datentime[0]+'\t'+datentime[1]+'\t'+datentime[2]+'\t'+datentime[3]+'\t'+datentime[4]+'\t'+datentime[5]+'\t'+str(eldeg)+'\t'+str(azdeg)+'\n'
-
-#lat=raw_input("enter the latitude of the place (enter in degrees, minutes and seconds, north is positive):   ")
-#lon=raw_input("enter the longitude of the place (put W for west and E for east at the end of the longitude):   ")
-#timezon=raw_input("enter the name of the place as within quotes as country/city with spaces replaced by underscore:   ")
 
 def createData(sens_no, start, end, lat = "37 52 27.447",
                lon = "122 15 33.3864 W", timezon = "US/Pacific"):
@@ -199,7 +203,10 @@ def createData(sens_no, start, end, lat = "37 52 27.447",
     START and ending at unix timestamp (in milliseconds) END. It generates
     sunposition data using the given LAT, LON, and TIMEZON. If these are
     not specified, createData resorts to the default LAT, LON, and TIMEZON
-    values, which are the values for the BEST Lab in Berkeley, CA.
+    values, which are the values for the BEST Lab in Berkeley, CA. LAT
+    format is "degrees minutes seconds" (north is positive). LON format is
+    "degrees minutes seconds W|E" (W for west and E for east). TIMEZON
+    choices can be looked up. Must be compatible with python utc timezones.
     """
     connection = sqlite3.connect('data.db')
     cursor = connection.cursor()
@@ -208,7 +215,6 @@ def createData(sens_no, start, end, lat = "37 52 27.447",
     url = "http://new.openbms.org/backend/api/prev/uuid/" + sensorID +\
           "?&start=" + start + "&end=" + end + "&limit=100000&"
     timestamp, reading, unixtime = parse(url)
-    #Add data from reading, timestamp, and unixtime into light table
     for count in range(len(reading)):
         time = timestamp[count]
         sunpos = getSunpos(lat, lon, timezon, time[3], time[2],
@@ -216,8 +222,8 @@ def createData(sens_no, start, end, lat = "37 52 27.447",
         to_db = [unixtime[count], time[0], time[1], time[2], time[3],
                  time[4], time[5],time[6], reading[count], sunpos[0],
                  sunpos[1]]
-        cursor.execute('INSERT OR IGNORE INTO ' + table
-                       + ' VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+        cursor.execute('INSERT OR IGNORE INTO ' + table +
+                       ' VALUES (?,?,?,?,?,?,?,?,?,?,?)',
                        to_db)
     connection.commit()
 
@@ -227,49 +233,58 @@ def createData(lat = "37 52 27.447", lon = "122 15 33.3864 W",
     until the current time for BEST lab sensors 2, 3, and 4."""
     connection = sqlite3.connect('data.db')
     cursor = connection.cursor()
-    createData(2, "1349478489000", str(int(time.time())*1000), lat, lon, timezon)
-    createData(3, "1353545153000", str(int(time.time())*1000), lat, lon, timezon)
-    createData(4, "1353545237000", str(int(time.time())*1000), lat, lon, timezon)
+    createData(2, "1349478489000", str(int(time.time())*1000), lat, lon,
+               timezon)
+    createData(3, "1353545153000", str(int(time.time())*1000), lat, lon,
+               timezon)
+    createData(4, "1353545237000", str(int(time.time())*1000), lat, lon,
+               timezon)
     #Save your changes
     connection.commit()
 
+def updateAllData():
+    """Updates all the data in BEST lab sensors 2, 3, and 4 by calling
+    updateData on each sensor."""
+    updateData(2)
+    updateData(3)
+    updateData(4)
+
 def updateData(sens_no, lat = "37 52 27.447", lon = "122 15 33.3864 W",
                timezon = "US/Pacific"):
-    """Updates all the data starting from the time of the latest entry of each time table until the current time for
-    BEST lab sensor number SENS_NO. It generates sunposition data using the given LAT, LON, and TIMEZON. If these are not specified, createData resorts to the default LAT, LON, and TIMEZON
-    values, which are the values for the BEST Lab in Berkeley, CA."""
+    """Updates all the data starting from the time of the latest entry of
+    each time table until the current time for BEST lab sensor number
+    SENS_NO. It generates sunposition data using the given LAT, LON, and
+    TIMEZON. If these are not specified, createData resorts to the default
+    LAT, LON, and TIMEZON values, which are the values for the BEST Lab
+    in Berkeley, CA. LAT format is "degrees minutes seconds" (north is
+    positive). LON format is "degrees minutes seconds W|E" (W for west and
+    E for east). TIMEZON choices can be looked up. Must be compatible with
+    python utc timezones.
+    """
     connection = sqlite3.connect('data.db')
     cursor = connection.cursor()
     sensorID = sensors_dict[sens_no]
     table = "light" + str(sens_no)
     cursor.execute('SELECT MAX(unixtime) FROM ' + table)
-    start = int(cursor.fetchone()[0]) #1365197540000L
-    end = int(time.time())*1000 #1365198007000L
-    limit = (end - start)/300000 #1L
+    start = int(cursor.fetchone()[0])
+    end = int(time.time())*1000
+    limit = (end - start)/300000
     print("limit is:" + str(limit))
     print("Start is:" + str(start))
     print("End is:" + str(end))
-    url = "http://new.openbms.org/backend/api/prev/uuid/" + sensorID + "?&start=" + str(start) + "&end=" + str(end) + "&limit=" + str(limit) + "&"
+    url = "http://new.openbms.org/backend/api/prev/uuid/" + sensorID +\
+          "?&start=" + str(start) + "&end=" + str(end) + "&limit=" +\
+          str(limit) + "&"
     timestamp, reading, unixtime = parse(url)
     print(len(reading))
-    #Add data from readings and timestamp into light table
     for count in range(len(reading)):
         t = timestamp[count]
-        sunpos = getSunpos(lat, lon, timezon, t[3], t[2], t[1], t[4], t[5], t[6])
+        sunpos = getSunpos(lat, lon, timezon, t[3], t[2], t[1], t[4],
+                           t[5], t[6])
         to_db = [unixtime[count], t[0], t[1], t[2], t[3], t[4], t[5],
                  t[6], reading[count], sunpos[0], sunpos[1]]
-        cursor.execute('INSERT OR IGNORE into ' + table + ' VALUES (?,?,?,?,?,?,?,?,?,?,?)',
-                   to_db)
+        cursor.execute('INSERT OR IGNORE into ' + table +
+                       ' VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+                       to_db)
     #Save your changes
     connection.commit()
-    
-
-
-
-
-
-
-
-
-
-
