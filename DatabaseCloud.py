@@ -1,3 +1,11 @@
+"""Code for extracting data from wunderground API and adding the data to the
+cloud table of data.db.
+
+The cloud table has the following 6 attributes (column names and types):
+
+timezone string, year int, month int, day int, time string, cloudiness string
+"""
+
 import urllib2
 import datetime
 from datetime import datetime
@@ -121,76 +129,62 @@ def arrayofmonths(month1,day1,year1,month2,day2,year2):
       return (arrayofdaysmonthsyears(month1,day1,year1,month2,day2,year2))[1]
 
 def arrayofyears(month1,day1,year1,month2,day2,year2):
-      return (arraryofdaysmonthsyears(month1,day1,year1,month2,day2,year2))[2]
+      return (arrayofdaysmonthsyears(month1,day1,year1,month2,day2,year2))[2]
 
 print "This program draws cloudiness data from wunderground site based on the start date, end date and weather station input by the user"
 print "  "
-startdate=raw_input("Enter the starting year, month and day of the data in YYYY MM DD: " )
-enddate=raw_input("Enter the ending year, month and day of the data in YYYY MM DD: " )
 
-start_date_split = startdate.split()
-end_date_split = enddate.split()
-startyear = int(start_date_split[0])
-endyear = int(end_date_split[0])
-startmonth = int(start_date_split[1])
-endmonth = int(end_date_split[1])
-startday = int(start_date_split[2])
-endday = int(end_date_split[2])
+def createData(end, start = "2012 11 01", feature = "history", station = "KOAK"):
+    """Adds all the wunderground data to the cloud data starting from start
+    date START until end date END. You can specify the feature FEATURE to pull
+    either historical data or hourly data. You also must specify the weather
+    station STATION. Default values are above."""
+    #Connect to the database data.db
+    connection = sqlite3.connect('data.db')
+    cursor = connection.cursor()
 
-DD = arrayofdays(endmonth,endday,endyear,startmonth,startday,startyear)
-MM = arrayofmonths(endmonth,endday,endyear,startmonth,startday,startyear)
-YYYY = arrayofyears(endmonth,endday,endyear,startmonth,startday,startyear)
+    start_split = start.split()
+    end_split = end.split()
+    startyear = int(start_split[0])
+    endyear = int(end_split[0])
+    startmonth = int(start_split[1])
+    endmonth = int(end_split[1])
+    startday = int(start_split[2])
+    endday = int(end_split[2])
+
+    DD = arrayofdays(endmonth,endday,endyear,startmonth,startday,startyear)
+    MM = arrayofmonths(endmonth,endday,endyear,startmonth,startday,startyear)
+    YYYY = arrayofyears(endmonth,endday,endyear,startmonth,startday,startyear)
     
-featureinput=raw_input("Enter if you want historical data or hourly data as history: ")
-query=raw_input("Enter the city or the weather station name: ")
+    for i in range(len(DD)):
+        YYYYMMDD=YYYY[i]+MM[i]+DD[i]
+        features=feature+"_"+str(YYYYMMDD)
+        url="http://api.wunderground.com/api/46c535271ddf6901/"+features+"/q/"+station+".json"
+        data=urllib2.urlopen(url).read()
+        getdata=str.split(data)
+        for count in range(len(getdata)-35):
+            if getdata[count]=='"tzname":':
+                if getdata[count+1]!='"UTC"':
+                    x1=str.split(getdata[count+1],'"')
+                    x=x1[1]
+                    y1=str.split(getdata[count-3],'"')
+                    y2=str.split(getdata[count-1],'"')
+                    y=y1[1]+":"+y2[1]+":00"
+                    z1=str.split(getdata[count-9],'"')
+                    z2=str.split(getdata[count-7],'"')
+                    z3=str.split(getdata[count-5],'"')
+                    z=z1[1]+"/"+z2[1]+"/"+z3[1]
+                    condition=str.split(getdata[count+35],',')
+                    if len(condition)>1:
+                        clouds=str.split(condition[1],":")
+                        cloudiness=str.split(clouds[1],'"')
+                        to_db = [x, YYYY[i], MM[i], DD[i], int(y1[1]), int(y1[2]), 0, cloudiness[1]]
+                        cursor.execute('INSERT INTO cloud VALUES (?,?,?,?,?,?,?,?)',
+                           to_db)
+    #Save your changes
+    connection.commit()
 
-#Connect to the database data.db
-connection = sqlite3.connect('data.db')
-cursor = connection.cursor()
+#def updateData():
 
-"""
-for i in range(len(DD)):
-    YYYYMMDD=YYYY[i]+MM[i]+DD[i]
-    features=featureinput+"_"+str(YYYYMMDD)
-    url="http://api.wunderground.com/api/46c535271ddf6901/"+features+"/q/"+query+".json"
-    #features: history
-    #weather station name: KOAK
-    data=urllib2.urlopen(url).read()
-    getdata=str.split(data)
-    timezone=[]
-    date=[]
-    time=[]
-    condis=[]
-    total=[]
-    for count in range(len(getdata)-35):
-        if getdata[count]=='"tzname":':
-            if getdata[count+1]!='"UTC"':
-                x1=str.split(getdata[count+1],'"')
-                x=x1[1]
-                y1=str.split(getdata[count-3],'"')
-                y2=str.split(getdata[count-1],'"')
-                y=y1[1]+":"+y2[1]+":00"
-                #print y2
-                z1=str.split(getdata[count-9],'"')
-                z2=str.split(getdata[count-7],'"')
-                z3=str.split(getdata[count-5],'"')
-                z=z1[1]+"/"+z2[1]+"/"+z3[1]
-                timezone.append(x)
-                time.append(y)
-                date.append(z)
-                condition=str.split(getdata[count+35],',')
-                if len(condition)>1:
-                    clouds=str.split(condition[1],":")
-                    #print clouds[1]
-                    cloudiness=str.split(clouds[1],'"')
-                    condis.append(cloudiness[1])
-                    to_db = [x, YYYY[i], MM[i], DD[i], y, cloudiness[1]]
-                    cursor.execute('INSERT INTO light VALUES (?,?,?,?,?,?)',
-                       to_db)
-                    save=x+'\t'+str(YYYY[i])+'\t'+str(MM[i])+'\t'+str(DD[i])+'\t'+y+'\t'+cloudiness[1]+'\n'
-                    print(save)
-                    total.append(x+' '+y+' '+z+' '+cloudiness[1])
-"""
 
-#Save your changes
-connection.commit()
+

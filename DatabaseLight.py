@@ -83,10 +83,6 @@ def parse(url):
         count+=1
     return [timestamp, reading, unixtime]
 
-lat = "37 52 27.447"
-lon = "122 15 33.3864 W"
-timezon = "US/Pacific"
-
 def getSunpos(lat, lon, timezon, year, month, day, hour, minute, seconds):
     """Returns a list containing the altitude and the azimuth given the
     latitude LAT, longitude LON, timezone TIMEZON, year YEAR, month MONTH,
@@ -227,7 +223,7 @@ def createData(sens_no, start, end, lat = "37 52 27.447",
                        to_db)
     connection.commit()
 
-def createData(lat = "37 52 27.447", lon = "122 15 33.3864 W",
+def createAllData(lat = "37 52 27.447", lon = "122 15 33.3864 W",
                timezon = "US/Pacific"):
     """Adds all the data starting from the beginning of data collection
     until the current time for BEST lab sensors 2, 3, and 4."""
