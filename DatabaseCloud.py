@@ -43,9 +43,6 @@ def dayInYear(month, day, year):
         current = current + 1
     return numberOfDays
 
-#month1, day1, year1 - enddate
-#month2, day2,year2 - startdate
-
 def difference(month1, day1, year1, month2, day2, year2):
     daycounter = 0;  
     if (year1 == year2):
@@ -131,9 +128,6 @@ def arrayofmonths(month1,day1,year1,month2,day2,year2):
 def arrayofyears(month1,day1,year1,month2,day2,year2):
       return (arrayofdaysmonthsyears(month1,day1,year1,month2,day2,year2))[2]
 
-print "This program draws cloudiness data from wunderground site based on the start date, end date and weather station input by the user"
-print "  "
-
 def createData(end, start = "2012 11 01", feature = "history", station = "KOAK"):
     """Adds all the wunderground data to the cloud data starting from start
     date START until end date END. You can specify the feature FEATURE to pull
@@ -155,6 +149,14 @@ def createData(end, start = "2012 11 01", feature = "history", station = "KOAK")
     DD = arrayofdays(endmonth,endday,endyear,startmonth,startday,startyear)
     MM = arrayofmonths(endmonth,endday,endyear,startmonth,startday,startyear)
     YYYY = arrayofyears(endmonth,endday,endyear,startmonth,startday,startyear)
+
+    cloudDict = {"Clear":"", "Partly":" Cloudy", "Mostly":" Cloudy", "Scattered":" Clouds",
+                 "Small":" Hail", "Funnel":" Cloud", "Patches":" of Fog", "Shallow":" Fog",
+                 "Partial":" Fog", "Overcast":"", "Squalls":"","Unknown":"","Haze":"",
+                 "Drizzle":"", "Rain":"", "Snow":"", "Ice":"", "Hail":"", "Mist":"",
+                 "Fog":"", "Smoke":"", "Volcanic":" Ash", "Widespread":" Dust", "Sand":"",
+                 "Spray":"", "Dust":" Whirls", "Sandstorm":"", "Low":" Drifting Snow/Dust/Sand",
+                 "Blowing":" Snow/Dust/Sand", "Thunderstorms":"", "Freezing":" Drizzle/Rain/Fog"}
     
     for i in range(len(DD)):
         YYYYMMDD=YYYY[i]+MM[i]+DD[i]
@@ -164,7 +166,7 @@ def createData(end, start = "2012 11 01", feature = "history", station = "KOAK")
         getdata=str.split(data)
         for count in range(len(getdata)-35):
             if getdata[count]=='"tzname":':
-                if getdata[count+1]!='"UTC"':
+                if getdata[count+1] != '"UTC"':
                     x1=str.split(getdata[count+1],'"')
                     x=x1[1]
                     y1=str.split(getdata[count-3],'"')
@@ -178,7 +180,7 @@ def createData(end, start = "2012 11 01", feature = "history", station = "KOAK")
                     if len(condition)>1:
                         clouds=str.split(condition[1],":")
                         cloudiness=str.split(clouds[1],'"')
-                        to_db = [x, YYYY[i], MM[i], DD[i], int(y1[1]), int(y2[1]), 0, cloudiness[1]]
+                        to_db = [x, YYYY[i], MM[i], DD[i], int(y1[1]), int(y2[1]), 0, cloudiness[1] + cloudDict[cloudiness[1]]]
                         cursor.execute('INSERT INTO cloud VALUES (?,?,?,?,?,?,?,?)',
                            to_db)
     #Save your changes

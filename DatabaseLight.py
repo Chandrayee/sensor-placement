@@ -215,7 +215,10 @@ def createData(sens_no, start, end, lat = "37 52 27.447",
         time = timestamp[count]
         sunpos = getSunpos(lat, lon, timezon, time[3], time[2],
                            time[1], time[4], time[5], time[6])
-        cloud = cursor.execute('SELECT cloudiness FROM cloud WHERE day = ' + str(time[1]) + ' AND month = ' + str(time[2]) + ' AND year = ' + str(time[3]) + ' AND hour = ' + str(time[4]))
+        cloud = cursor.execute('SELECT cloudiness FROM cloud WHERE day = ' +
+                               str(time[1]) + ' AND month = ' + str(time[2]) +
+                               ' AND year = ' + str(time[3]) + ' AND hour = ' +
+                               str(time[4]))
         to_db = [unixtime[count], time[0], time[1], time[2], time[3],
                  time[4], time[5],time[6], reading[count], sunpos[0],
                  sunpos[1], cloud.fetchone()]
