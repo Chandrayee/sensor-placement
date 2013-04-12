@@ -19,14 +19,14 @@ def Print(msg):
         print >> outputFile, msg
         outputFile.close()
     else:
-        print msg
+        print (msg)
         
 
 def Describe(dbFile):
     connection = sqlite.connect(dbFile)
     cursor = connection.cursor()
     
-    Print("TableName\tColumns\tRows\tCells")
+    print("TableName\tColumns\tRows\tCells")
 
     totalTables = 0
     totalColumns = 0
@@ -79,11 +79,11 @@ if __name__ == "__main__":
         outputFilename = sys.argv[2]
         Describe(dbFile)
     else:        
-        print "\n\tUsage:"
-        print "\n\t\tDBDescribe.py {dbFile}"
-        print "\t\t\tPrints summary of {dbFile} to standard output."    
-        print "\n\t\tDBDescribe.py {dbFile} {outputFile}"
-        print "\t\t\tAppends summary of {dbFile} to {outputFile}."    
+        print ("\n\tUsage:")
+        print ("\n\t\tDBDescribe.py {dbFile}")
+        print ("\t\t\tPrints summary of {dbFile} to standard output.")    
+        print ("\n\t\tDBDescribe.py {dbFile} {outputFile}")
+        print ("\t\t\tAppends summary of {dbFile} to {outputFile}.")    
         
 
         

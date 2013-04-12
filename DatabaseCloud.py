@@ -159,7 +159,7 @@ def createData(end, start = "2012 11 01", feature = "history", station = "KOAK")
     for i in range(len(DD)):
         YYYYMMDD=YYYY[i]+MM[i]+DD[i]
         features=feature+"_"+str(YYYYMMDD)
-        url="http://api.wunderground.com/api/46c535271ddf6901/"+features+"/q/"+station+".json"
+        url="http://api.wunderground.com/api/f2983417df06de3a/"+features+"/q/"+station+".json"
         data=urllib2.urlopen(url).read()
         getdata=str.split(data)
         for count in range(len(getdata)-35):
@@ -178,7 +178,7 @@ def createData(end, start = "2012 11 01", feature = "history", station = "KOAK")
                     if len(condition)>1:
                         clouds=str.split(condition[1],":")
                         cloudiness=str.split(clouds[1],'"')
-                        to_db = [x, YYYY[i], MM[i], DD[i], int(y1[1]), int(y1[2]), 0, cloudiness[1]]
+                        to_db = [x, YYYY[i], MM[i], DD[i], int(y1[1]), int(y2[1]), 0, cloudiness[1]]
                         cursor.execute('INSERT INTO cloud VALUES (?,?,?,?,?,?,?,?)',
                            to_db)
     #Save your changes
