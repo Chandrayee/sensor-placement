@@ -192,7 +192,7 @@ def getSunpos(lat, lon, timezon, year, month, day, hour, minute, seconds):
     #data is saved for future reference
     return [str(eldeg), str(azdeg)]
 
-def createData(sens_no, start, end, lat = "37 52 27.447",
+def createLightData(sens_no, start, end, lat = "37 52 27.447",
                lon = "122 15 33.3864 W", timezon = "US/Pacific"):
     """This function adds data for BEST lab sensor SENS_NO into its
     respective light table starting from unix timestamp (in milliseconds)
@@ -219,25 +219,33 @@ def createData(sens_no, start, end, lat = "37 52 27.447",
                                str(time[1]) + ' AND month = ' + str(time[2]) +
                                ' AND year = ' + str(time[3]) + ' AND hour = ' +
                                str(time[4]))
-        to_db = [unixtime[count], time[0], time[1], time[2], time[3],
-                 time[4], time[5],time[6], reading[count], sunpos[0],
-                 sunpos[1], cloud.fetchone()]
+        cloudiness = cloud.fetchone()
+        if cloudiness is not None:
+            to_db = [unixtime[count], time[0], time[1], time[2], time[3],
+                     time[4], time[5],time[6], reading[count], sunpos[0],
+                     sunpos[1], str(cloudiness[0])]
+        else:
+            to_db = [unixtime[count], time[0], time[1], time[2], time[3],
+                     time[4], time[5],time[6], reading[count], sunpos[0],
+                     sunpos[1], "Null"]
         cursor.execute('INSERT OR IGNORE INTO ' + table +
-                       ' VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
-                       to_db)
+                        ' VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+                        to_db)
+            
+            
     connection.commit()
 
-def createAllData(lat = "37 52 27.447", lon = "122 15 33.3864 W",
+def createAllLightData(lat = "37 52 27.447", lon = "122 15 33.3864 W",
                timezon = "US/Pacific"):
     """Adds all the data starting from the beginning of data collection
     until the current time for BEST lab sensors 2, 3, and 4."""
     connection = sqlite3.connect('data.db')
     cursor = connection.cursor()
-    createData(2, "1349478489000", str(int(time.time())*1000), lat, lon,
+    createLightData(2, "1349478489000", str(int(time.time())*1000), lat, lon,
                timezon)
-    createData(3, "1353545153000", str(int(time.time())*1000), lat, lon,
+    createLightData(3, "1353545153000", str(int(time.time())*1000), lat, lon,
                timezon)
-    createData(4, "1353545237000", str(int(time.time())*1000), lat, lon,
+    createLightData(4, "1353545237000", str(int(time.time())*1000), lat, lon,
                timezon)
     #Save your changes
     connection.commit()

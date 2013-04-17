@@ -128,7 +128,7 @@ def arrayofmonths(month1,day1,year1,month2,day2,year2):
 def arrayofyears(month1,day1,year1,month2,day2,year2):
       return (arrayofdaysmonthsyears(month1,day1,year1,month2,day2,year2))[2]
 
-def createData(end, start = "2012 11 01", feature = "history", station = "KOAK"):
+def createCloudData(end, start = "2012 10 05", feature = "history", station = "KOAK"):
     """Adds all the wunderground data to the cloud data starting from start
     date START until end date END. You can specify the feature FEATURE to pull
     either historical data or hourly data. You also must specify the weather
@@ -149,40 +149,32 @@ def createData(end, start = "2012 11 01", feature = "history", station = "KOAK")
     DD = arrayofdays(endmonth,endday,endyear,startmonth,startday,startyear)
     MM = arrayofmonths(endmonth,endday,endyear,startmonth,startday,startyear)
     YYYY = arrayofyears(endmonth,endday,endyear,startmonth,startday,startyear)
-
-    cloudDict = {"Clear":"", "Partly":" Cloudy", "Mostly":" Cloudy", "Scattered":" Clouds",
-                 "Small":" Hail", "Funnel":" Cloud", "Patches":" of Fog", "Shallow":" Fog",
-                 "Partial":" Fog", "Overcast":"", "Squalls":"","Unknown":"","Haze":"",
-                 "Drizzle":"", "Rain":"", "Snow":"", "Ice":"", "Hail":"", "Mist":"",
-                 "Fog":"", "Smoke":"", "Volcanic":" Ash", "Widespread":" Dust", "Sand":"",
-                 "Spray":"", "Dust":" Whirls", "Sandstorm":"", "Low":" Drifting Snow/Dust/Sand",
-                 "Blowing":" Snow/Dust/Sand", "Thunderstorms":"", "Freezing":" Drizzle/Rain/Fog"}
     
     for i in range(len(DD)):
-        YYYYMMDD=YYYY[i]+MM[i]+DD[i]
-        features=feature+"_"+str(YYYYMMDD)
+        day = str(DD[i])
+        if (DD[i] < 10):
+            day = "0" + str(DD[i])
+        YYYYMMDD=str(YYYY[i])+str(MM[i])+day
+        features=feature+"_"+YYYYMMDD
         url="http://api.wunderground.com/api/f2983417df06de3a/"+features+"/q/"+station+".json"
+        print(url)
         data=urllib2.urlopen(url).read()
-        getdata=str.split(data)
-        for count in range(len(getdata)-35):
-            if getdata[count]=='"tzname":':
-                if getdata[count+1] != '"UTC"':
-                    x1=str.split(getdata[count+1],'"')
-                    x=x1[1]
-                    y1=str.split(getdata[count-3],'"')
-                    y2=str.split(getdata[count-1],'"')
-                    y=y1[1]+":"+y2[1]+":00"
-                    z1=str.split(getdata[count-9],'"')
-                    z2=str.split(getdata[count-7],'"')
-                    z3=str.split(getdata[count-5],'"')
-                    z=z1[1]+"/"+z2[1]+"/"+z3[1]
-                    condition=str.split(getdata[count+35],',')
-                    if len(condition)>1:
-                        clouds=str.split(condition[1],":")
-                        cloudiness=str.split(clouds[1],'"')
-                        to_db = [x, YYYY[i], MM[i], DD[i], int(y1[1]), int(y2[1]), 0, cloudiness[1] + cloudDict[cloudiness[1]]]
-                        cursor.execute('INSERT INTO cloud VALUES (?,?,?,?,?,?,?,?)',
-                           to_db)
+        getdata=data.split(",")
+        for count in range(len(getdata)):
+            if '"tzname":' in getdata[count]:
+                if '"tzname": "UTC"' not in getdata[count]:
+                    minute = getdata[count-1].split(":")
+                    y2 = minute[1].strip().replace("\"","")
+                    if (y2 == "53"):
+                        timezone = getdata[count].split(":")
+                        x = timezone[1].replace("\"","").replace("}","").strip()
+                        hour = getdata[count-2].split(":")
+                        y1 = hour[1].strip().replace("\"","")
+                        clouds = getdata[count+30].split(":")
+                        cloudiness = clouds[1].replace("\"","")
+                        to_db = [x, YYYY[i], MM[i], DD[i], int(y1), int(y2), 0, cloudiness]
+                        cursor.execute('INSERT OR IGNORE INTO cloud VALUES (?,?,?,?,?,?,?,?)',
+                               to_db)
     #Save your changes
     connection.commit()
 
