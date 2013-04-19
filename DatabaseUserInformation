@@ -1,0 +1,120 @@
+Database Information for User
+
+DATABASE CREATION
+===================
+
+First, create the tables within the Database. 
+File Name : create_tables.py
+This file will create the Database with the cloud tables and light tables for 
+
+each sensor. To check if the Database has been created, open Gitshell or 
+
+where the Database is stored. 
+Run python.exe . DatabaseSizeSummary.py data.db
+You will be able to see the tables inside the database. 
+
+Second, you will insert the cloud data into the Database. The Light tables 
+
+require the cloud data so you must insert cloud data first. 
+
+Here are the steps:
+1. Open DatabaseCloud.py
+2. Run the function createCloudData(END DATE)
+Note : You must pass in the argument for end date. 
+It must be in this format:  "YYYY MM DD" 
+This includes the spaces and the quotation marks. 
+3. To check if the Database has been updated: 
+Run python.exe . DatabaseSizeSummary.py data.db within the Gitshell
+
+This time the colums and rows of the cloud table should have values 
+
+because data has been inserted. 
+
+Note : If the data does not enter, there could be a problem with overusage 
+
+of the wunderground key. 
+
+3. Now, we can insert the light data from the sensors into the Database. 
+
+Here are the steps:
+1. Open DatabaseLight.py
+2. Run the function createAllData()
+3. Again the Database can be checked to see if the light data has been 
+
+entered using the command python.exe . DatabaseSizeSummary.py 
+
+data.db in the Gitshell. 
+
+
+DATABASE UPDATING
+==================
+
+ Now that the data has been inserted, we do not want to constantly 
+
+recreate the Database. Whenever we want to use the Database again, we 
+
+simply have to update the data. 
+
+To do this, we must first, update the Cloud Data because once again the 
+
+light table includes the cloud data. 
+Here are the Steps to Update the Data:
+1. Open DatabaseCloud.py
+2. Run the Function updateCloudData()
+ - It has no arguments. It will update until the current time. 
+3. Open DatabaseLight.py
+4. Run the Function updateAllData()
+- It has no arguments. It will also update until the current time. 
+
+
+DATABASE QUERYING
+==================
+
+To query from the Database, you must know what data you need. 
+
+Within each of the Light Tables, the table will store data for :
+  unixtime float, weekday string,
+                day int, month int, year int, hour int, minute int, seconds int, 
+	light float, altitude float, azimuth float,
+                cloudiness string,
+                PRIMARY KEY (unixtime)
+
+Within the Cloud table, the table stores data for: 
+	timezone string, year int, month int,
+                day int, hour int, minute int, seconds int, unixtime float,
+                cloudiness string, PRIMARY KEY (year, month, day, hour,
+                minute, seconds
+
+
+Note that cloudiness data can be accessed in the Light tables so you will 
+
+most likely be querying into the light tables. 
+
+1. Open DatabaseLight.py (if you are querying from the Light Tables)
+2. You must first run these statements on the Python Shell. 
+
+>>> connection = sqlite3.connect('data.db')
+>>> cursor = connection.cursor()
+
+These statements establish a connection to the database.
+Then we will select what data we need from the datase. 
+
+The syntax is 
+SELECT  (what data type you want (ex: day, timezone, cloudiness,etc)) 
+
+FROM (what table the data is in)
+WHERE ( conditions ex: month = 9, cloudiness = Partly Cloudy, light > x)
+You can combine conditions with OR AND in between the conditions
+
+To get the entire row, you SELECT *. This is how you execute the select 
+
+statement: 
+>>> cursor.execute('SELECT * FROM light2')
+
+Now, to see the data, inside Python Shell, we run: 
+>>> for i in cursor.fetchall():
+	print i
+
+We can either call cursor.fetchone() or cursor.fetchmany(x) where you 
+
+enter how much data you want. 
