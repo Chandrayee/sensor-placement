@@ -50,6 +50,7 @@ class Parsing(object):
 					if moteNum not in locations:
 						locations[moteNum]=[]
 					locations[moteNum]=moteXY
+				#if fyle=='averagedGuestrinDataFile.txt':
 			#print epochVec.keys()
 			#for moteNum in data.keys():
 			#	print (moteNum, max([a[0] for a in data[moteNum]))
