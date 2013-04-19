@@ -8,11 +8,33 @@ timezone string, year int, month int, day int, time string, cloudiness string
 
 import urllib2
 import datetime
-from datetime import datetime
 import numpy as np
 import sqlite3
+import numpy as np
+from numpy import vstack
+import scipy as sp
+from scipy import stats
+from datetime import datetime,date
+import time
+from time import mktime, localtime, gmtime, strftime
+import statsmodels as sm
+import matplotlib as mpl
+from matplotlib import pyplot as plt
+import pytz
+from pytz import timezone
+import math
+import pdb
+
+import sqlite3
+from sqlite3 import dbapi2 as sqlite3
 
 
+
+def make_unix_timestamp(date_string, time_string):
+    format = '%Y %m %d %H %M %S'
+    return time.mktime(time.strptime(date_string + " " + time_string, format))
+                       
+    
 def isLeapYear( year):
       if (year % 400 == 0) :
           return True
@@ -67,7 +89,7 @@ def arrayofdaysmonthsyears(month1,day1,year1,month2,day2,year2):
     if daysInMonth(month2, year2) == day2:
           daysleftinmonth2 = daysInMonth(month2, year2) - day2 + 1
     else:
-          daysleftinmonth2= daysInMonth(month2, year2) - day2 + 2 #to include start and end
+          daysleftinmonth2= daysInMonth(month2, year2) - day2 + 1 #to include start and end
     if year1 == year2:
             if month1 == month2:
                 monthsinbetween = 0
@@ -151,9 +173,12 @@ def createCloudData(end, start = "2012 10 05", feature = "history", station = "K
     YYYY = arrayofyears(endmonth,endday,endyear,startmonth,startday,startyear)
     
     for i in range(len(DD)):
+        month = str(MM[i])
         day = str(DD[i])
         if (DD[i] < 10):
-            day = "0" + str(DD[i])
+            day = "0" + day
+        if (MM[i] < 10):
+              month = "0" + month
         YYYYMMDD=str(YYYY[i])+str(MM[i])+day
         features=feature+"_"+YYYYMMDD
         url="http://api.wunderground.com/api/f2983417df06de3a/"+features+"/q/"+station+".json"
@@ -172,13 +197,28 @@ def createCloudData(end, start = "2012 10 05", feature = "history", station = "K
                         y1 = hour[1].strip().replace("\"","")
                         clouds = getdata[count+30].split(":")
                         cloudiness = clouds[1].replace("\"","")
-                        to_db = [x, YYYY[i], MM[i], DD[i], int(y1), int(y2), 0, cloudiness]
-                        cursor.execute('INSERT OR IGNORE INTO cloud VALUES (?,?,?,?,?,?,?,?)',
+                        unixtime = make_unix_timestamp(str(YYYY[i]) + " " + month + " " + day, y1 + " " + y2 + " " + "00")
+                        to_db = [x, YYYY[i], MM[i], DD[i], int(y1), int(y2), 0, unixtime, cloudiness]
+                        cursor.execute('INSERT OR IGNORE INTO cloud VALUES (?,?,?,?,?,?,?,?,?)',
                                to_db)
     #Save your changes
     connection.commit()
 
-#def updateData():
-
+def updateCloudData():
+    connection = sqlite3.connect('data.db')
+    cursor = connection.cursor()
+    cursor.execute('SELECT year, month, day, MAX(unixtime) FROM cloud')
+    current = cursor.fetchall()[0]
+    year = str(current[0])
+    month = str(current[1])
+    day = str(current[2])
+    if month < 10:
+          month = "0" + month
+    if day < 10:
+          day = "0" + day
+    start = year + " " + month + " " + day
+    ttb = time.localtime()
+    end = strftime("%Y %m %d", ttb)
+    createCloudData(end, start)
 
 
