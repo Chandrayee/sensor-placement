@@ -286,7 +286,11 @@ def updateData(sens_no, lat = "37 52 27.447", lon = "122 15 33.3864 W",
                                ' AND year = ' + str(time[3]) + ' AND hour = ' +
                                str(time[4]))
         to_db = [unixtime[count], t[0], t[1], t[2], t[3], t[4], t[5],
+<<<<<<< HEAD
                  t[6], reading[count], sunpos[0], sunpos[1], str(cloud.fetchone())]
+=======
+                 t[6], reading[count], sunpos[0], sunpos[1], cloud.fetchone()]
+>>>>>>> 453ebdc53e97ce3c229daef834b05d37722fe199
         
         cursor.execute('INSERT OR IGNORE into ' + table +
                        ' VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
