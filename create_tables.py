@@ -38,7 +38,7 @@ cursor.execute('''CREATE TABLE light4 (unixtime float, weekday string,
 #Create one table for cloud measurement data
 
 cursor.execute('''CREATE TABLE cloud (timezone string, year int, month int,
-                day int, hour int, minute int, seconds int,
+                day int, hour int, minute int, seconds int, unixtime float,
                 cloudiness string, PRIMARY KEY (year, month, day, hour,
                 minute, seconds))''')
 

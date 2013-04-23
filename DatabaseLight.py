@@ -221,10 +221,10 @@ def createData(sens_no, start, end, lat = "37 52 27.447",
                                str(time[4]))
         to_db = [unixtime[count], time[0], time[1], time[2], time[3],
                  time[4], time[5],time[6], reading[count], sunpos[0],
-                 sunpos[1], cloud.fetchone()]
+                 sunpos[1], str(cloud.fetchone())]
         cursor.execute('INSERT OR IGNORE INTO ' + table +
-                       ' VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
-                       to_db)
+                       ' VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
+                       ,to_db)
     connection.commit()
 
 def createAllData(lat = "37 52 27.447", lon = "122 15 33.3864 W",
@@ -281,10 +281,15 @@ def updateData(sens_no, lat = "37 52 27.447", lon = "122 15 33.3864 W",
         t = timestamp[count]
         sunpos = getSunpos(lat, lon, timezon, t[3], t[2], t[1], t[4],
                            t[5], t[6])
+        cloud = cursor.execute('SELECT cloudiness FROM cloud WHERE day = ' +
+                               str(time[1]) + ' AND month = ' + str(time[2]) +
+                               ' AND year = ' + str(time[3]) + ' AND hour = ' +
+                               str(time[4]))
         to_db = [unixtime[count], t[0], t[1], t[2], t[3], t[4], t[5],
-                 t[6], reading[count], sunpos[0], sunpos[1]]
+                 t[6], reading[count], sunpos[0], sunpos[1], str(cloud.fetchone())]
+        
         cursor.execute('INSERT OR IGNORE into ' + table +
-                       ' VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+                       ' VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
                        to_db)
     #Save your changes
     connection.commit()
