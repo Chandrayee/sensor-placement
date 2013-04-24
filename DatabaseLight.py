@@ -31,7 +31,8 @@ import sqlite3
 from sqlite3 import dbapi2 as sqlite3
 
 #Dictionary that maps each BEST lab sensor number to its sensor ID.
-sensors_dict = {2:"f862a13d-91ee-5696-b2b1-b97d81a47b5b",
+sensors_dict = {1:"7140b2da-94cd-5bae-a1e8-cb85a6715bf5",
+                2:"f862a13d-91ee-5696-b2b1-b97d81a47b5b",
                 3:"b92ddaee-48de-5f37-82ed-fe1f0922b0e5",
                 4:"8bb0b6a2-971f-54dc-9e19-14424b9a1764"}
 
@@ -233,6 +234,8 @@ def createAllData(lat = "37 52 27.447", lon = "122 15 33.3864 W",
     until the current time for BEST lab sensors 2, 3, and 4."""
     connection = sqlite3.connect('data.db')
     cursor = connection.cursor()
+    createData(1, "1347059530000", str(int(time.time())*1000), lat, lon,
+               timezon)
     createData(2, "1349478489000", str(int(time.time())*1000), lat, lon,
                timezon)
     createData(3, "1353545153000", str(int(time.time())*1000), lat, lon,
@@ -245,6 +248,7 @@ def createAllData(lat = "37 52 27.447", lon = "122 15 33.3864 W",
 def updateAllData():
     """Updates all the data in BEST lab sensors 2, 3, and 4 by calling
     updateData on each sensor."""
+    updateData(1)
     updateData(2)
     updateData(3)
     updateData(4)
@@ -285,8 +289,9 @@ def updateData(sens_no, lat = "37 52 27.447", lon = "122 15 33.3864 W",
                                str(time[1]) + ' AND month = ' + str(time[2]) +
                                ' AND year = ' + str(time[3]) + ' AND hour = ' +
                                str(time[4]))
+        cloudiness = str(cloud.fetchone()[0])
         to_db = [unixtime[count], t[0], t[1], t[2], t[3], t[4], t[5],
-                 t[6], reading[count], sunpos[0], sunpos[1], str(cloud.fetchone())]
+                 t[6], reading[count], sunpos[0], sunpos[1], cloudiness]
         
         cursor.execute('INSERT OR IGNORE into ' + table +
                        ' VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',

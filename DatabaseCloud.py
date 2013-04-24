@@ -150,7 +150,7 @@ def arrayofmonths(month1,day1,year1,month2,day2,year2):
 def arrayofyears(month1,day1,year1,month2,day2,year2):
       return (arrayofdaysmonthsyears(month1,day1,year1,month2,day2,year2))[2]
 
-def createCloudData(end, start = "2012 10 05", feature = "history", station = "KOAK"):
+def createCloudData(end, start = "2012 09 07", feature = "history", station = "KOAK"):
     """Adds all the wunderground data to the cloud data starting from start
     date START until end date END. You can specify the feature FEATURE to pull
     either historical data or hourly data. You also must specify the weather
