@@ -7,25 +7,28 @@ cursor.execute('DROP TABLE light1')
 cursor.execute('DROP TABLE light2')
 cursor.execute('DROP TABLE light3')
 cursor.execute('DROP TABLE light4')
-cursor.execute('''CREATE TABLE light2 (unixtime float, weekday string,
-                day int, month int, year int, hour int, minute int,
-                seconds int, light float, altitude float, azimuth float,
-                cloudiness string,
+cursor.execute('''CREATE TABLE light1 (unixtime REAL, weekday TEXT,
+                day INTEGER, month INTEGER, year INTEGER, hour INTEGER,
+                minute INTEGER, seconds INTEGER, light REAL, altitude REAL,
+                azimuth REAL, cloudiness TEXT, x REAL, y REAL,
                 PRIMARY KEY (unixtime))''')
-cursor.execute('''CREATE TABLE light3 (unixtime float, weekday string,
-                day int, month int, year int, hour int, minute int,
-                seconds int, light float, altitude float, azimuth float,
-                cloudiness string,
+
+cursor.execute('''CREATE TABLE light2 (unixtime REAL, weekday TEXT,
+                day INTEGER, month INTEGER, year INTEGER, hour INTEGER,
+                minute INTEGER, seconds INTEGER, light REAL, altitude REAL,
+                azimuth REAL, cloudiness TEXT, x REAL, y REAL,
                 PRIMARY KEY (unixtime))''')
-cursor.execute('''CREATE TABLE light4 (unixtime float, weekday string,
-                day int, month int, year int, hour int, minute int,
-                seconds int, light float, altitude float, azimuth float,
-                cloudiness string,
+
+cursor.execute('''CREATE TABLE light3 (unixtime REAL, weekday TEXT,
+                day INTEGER, month INTEGER, year INTEGER, hour INTEGER,
+                minute INTEGER, seconds INTEGER, light REAL, altitude REAL,
+                azimuth REAL, cloudiness TEXT, x REAL, y REAL,
                 PRIMARY KEY (unixtime))''')
-cursor.execute('''CREATE TABLE light1 (unixtime float, weekday string,
-                day int, month int, year int, hour int, minute int,
-                seconds int, light float, altitude float, azimuth float,
-                cloudiness string,
+
+cursor.execute('''CREATE TABLE light4 (unixtime REAL, weekday TEXT,
+                day INTEGER, month INTEGER, year INTEGER, hour INTEGER,
+                minute INTEGER, seconds INTEGER, light REAL, altitude REAL,
+                azimuth REAL, cloudiness TEXT, x REAL, y REAL,
                 PRIMARY KEY (unixtime))''')
 
 

@@ -5,7 +5,7 @@ connection = sqlite3.connect('data.db')
 cursor = connection.cursor()
 
 cloud_val = ("Clear",) #Insert whatever cloudiness value you want
-cloud = cursor.execute('SELECT * FROM cloud WHERE cloudiness = ?', cloud_val)
+cloud = cursor.execute('SELECT * FROM light1 WHERE cloudiness = ?', cloud_val)
 
 #Print values
 for i in cursor.fetchmany(10):

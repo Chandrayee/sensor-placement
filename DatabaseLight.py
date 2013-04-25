@@ -30,6 +30,14 @@ import pdb
 import sqlite3
 from sqlite3 import dbapi2 as sqlite3
 
+def change_loc(sens_no, new):
+    """Changes the value of SENS_NO in the sensors_loc dictionary to the
+    tuple NEW."""
+    sensor_loc[sens_no] = new
+
+#Dictionary that maps each BEST lab sensor number to its location (x, y)
+sensors_loc = {1:(0,0), 2:(0,1), 3:(1,0), 4:(1,1)}
+
 #Dictionary that maps each BEST lab sensor number to its sensor ID.
 sensors_dict = {1:"7140b2da-94cd-5bae-a1e8-cb85a6715bf5",
                 2:"f862a13d-91ee-5696-b2b1-b97d81a47b5b",
@@ -208,6 +216,9 @@ def createData(sens_no, start, end, lat = "37 52 27.447",
     connection = sqlite3.connect('data.db')
     cursor = connection.cursor()
     sensorID = sensors_dict[sens_no]
+    sensorLoc = sensors_loc[sens_no]
+    x = sensorLoc[0]
+    y = sensorLoc[1]
     table = "light" + str(sens_no)
     url = "http://new.openbms.org/backend/api/prev/uuid/" + sensorID +\
           "?&start=" + start + "&end=" + end + "&limit=100000&"
@@ -224,18 +235,18 @@ def createData(sens_no, start, end, lat = "37 52 27.447",
         if cloudiness is not None:
             to_db = [unixtime[count], time[0], time[1], time[2], time[3],
                      time[4], time[5],time[6], reading[count], sunpos[0],
-                     sunpos[1], str(cloudiness[0])]
+                     sunpos[1], str(cloudiness[0]), x, y]
         else:
             to_db = [unixtime[count], time[0], time[1], time[2], time[3],
                      time[4], time[5],time[6], reading[count], sunpos[0],
-                     sunpos[1], "Null"]
+                     sunpos[1], "Null", x, y]
         cursor.execute('INSERT OR IGNORE INTO ' + table +
-                       ' VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+                       ' VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
                        to_db)
     connection.commit()
 
 def createAllData(lat = "37 52 27.447", lon = "122 15 33.3864 W",
-               timezon = "US/Pacific"):
+                    timezon = "US/Pacific"):
     """Adds all the data starting from the beginning of data collection
     until the current time for BEST lab sensors 2, 3, and 4."""
     connection = sqlite3.connect('data.db')
@@ -274,6 +285,9 @@ def updateData(sens_no, lat = "37 52 27.447", lon = "122 15 33.3864 W",
     connection = sqlite3.connect('data.db')
     cursor = connection.cursor()
     sensorID = sensors_dict[sens_no]
+    sensorLoc = sensors_loc[sens_no]
+    x = sensorLoc[0]
+    y = sensorLoc[1]
     table = "light" + str(sens_no)
     cursor.execute('SELECT MAX(unixtime) FROM ' + table)
     start = int(cursor.fetchone()[0])
@@ -299,13 +313,13 @@ def updateData(sens_no, lat = "37 52 27.447", lon = "122 15 33.3864 W",
         if cloudiness is not None:
             to_db = [unixtime[count], time[0], time[1], time[2], time[3],
                      time[4], time[5],time[6], reading[count], sunpos[0],
-                     sunpos[1], str(cloudiness[0])]
+                     sunpos[1], str(cloudiness[0]), x, y]
         else:
             to_db = [unixtime[count], time[0], time[1], time[2], time[3],
                      time[4], time[5],time[6], reading[count], sunpos[0],
-                     sunpos[1], "Null"]
+                     sunpos[1], "Null", x, y]
         cursor.execute('INSERT OR IGNORE INTO ' + table +
-                       ' VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+                       ' VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
                        to_db)
     #Save your changes
     connection.commit()

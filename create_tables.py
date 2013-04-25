@@ -11,28 +11,28 @@ connection = sqlite3.connect('data.db')
 cursor = connection.cursor()
 
 #Create one table per sensor for light measurement data
-cursor.execute('''CREATE TABLE light1 (unixtime float, weekday string,
-                day int, month int, year int, hour int, minute int,
-                seconds int, light float, altitude float, azimuth float,
-                cloudiness string,
+cursor.execute('''CREATE TABLE light1 (unixtime REAL, weekday TEXT,
+                day INTEGER, month INTEGER, year INTEGER, hour INTEGER,
+                minute INTEGER, seconds INTEGER, light REAL, altitude REAL,
+                azimuth REAL, cloudiness TEXT, x REAL, y REAL,
                 PRIMARY KEY (unixtime))''')
 
-cursor.execute('''CREATE TABLE light2 (unixtime float, weekday string,
-                day int, month int, year int, hour int, minute int,
-                seconds int, light float, altitude float, azimuth float,
-                cloudiness string,
+cursor.execute('''CREATE TABLE light2 (unixtime REAL, weekday TEXT,
+                day INTEGER, month INTEGER, year INTEGER, hour INTEGER,
+                minute INTEGER, seconds INTEGER, light REAL, altitude REAL,
+                azimuth REAL, cloudiness TEXT, x REAL, y REAL,
                 PRIMARY KEY (unixtime))''')
 
-cursor.execute('''CREATE TABLE light3 (unixtime float, weekday string,
-                day int, month int, year int, hour int, minute int,
-                seconds int, light float, altitude float, azimuth float,
-                cloudiness string,
+cursor.execute('''CREATE TABLE light3 (unixtime REAL, weekday TEXT,
+                day INTEGER, month INTEGER, year INTEGER, hour INTEGER,
+                minute INTEGER, seconds INTEGER, light REAL, altitude REAL,
+                azimuth REAL, cloudiness TEXT, x REAL, y REAL,
                 PRIMARY KEY (unixtime))''')
 
-cursor.execute('''CREATE TABLE light4 (unixtime float, weekday string,
-                day int, month int, year int, hour int, minute int,
-                seconds int, light float, altitude float, azimuth float,
-                cloudiness string,
+cursor.execute('''CREATE TABLE light4 (unixtime REAL, weekday TEXT,
+                day INTEGER, month INTEGER, year INTEGER, hour INTEGER,
+                minute INTEGER, seconds INTEGER, light REAL, altitude REAL,
+                azimuth REAL, cloudiness TEXT, x REAL, y REAL,
                 PRIMARY KEY (unixtime))''')
 
 #Create one table for cloud measurement data
