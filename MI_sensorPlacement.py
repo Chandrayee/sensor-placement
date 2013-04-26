@@ -62,6 +62,7 @@ class Parsing(object):
 		datafile=open('averagedGuestrinDataFile.txt', 'w')
 		parsedText=self.textParsing()
 		data=parsedText[1]
+		locations=parsedText[2]
 		#print data[15]
 		epochVec=parsedText[0]
 		numBins=(end-start)/binSize
@@ -92,7 +93,7 @@ class Parsing(object):
 					if moteNum not in finalData:
 						finalData[moteNum]=[]
 					finalData[moteNum].append((readings[0],readings[1]))
-			datafile.write(str(finalData[moteNum])+'\n')
+			datafile.write(str((moteNum, locations[moteNum],finalData[moteNum]))+'\n')
 
 
 		
@@ -139,7 +140,8 @@ def distanceMatrix():
 	return dists
 
 
-
+def sampleCovariance(data):
+	return np.cov(data)
 
 
 class Kernel(object):
@@ -165,6 +167,8 @@ class Kernel(object):
         elif self.kernelChoice=='rational quadratic':
         	rationalQuad=(1+((np.square(dists))/(2*self.Alpha*(self.Lambda**2))))
         	return rationalQuad
+        elif self.kernelChoice=='sample covariance':
+        	sampleCovariance=sampleCovariance
 
 
 
@@ -213,7 +217,7 @@ def maxMutualInformation(k, cov_V_V, S, U):
 	for i in range(k):
 		A_indices=sorted(A)
 		if not len(A)==0:
-			cov_A_A=np.vstack([cov_V_V[i,[A_indices]] for i in A_indices]) #make sure this stacks right
+			cov_A_A=np.vstack([cov_V_V[a,[A_indices]] for a in A_indices]) #make sure this stacks right
 			inv_cov_A_A=np.linalg.inv(cov_A_A)
 		else:
 			cov_A_A=0

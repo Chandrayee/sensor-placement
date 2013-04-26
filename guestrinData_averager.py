@@ -2,7 +2,7 @@
 
 import MI_sensorPlacement as MI
 
-files=['data.txt']
+files=['data.txt','mote_locs.txt']
 parser=MI.Parsing(files)
 start=20
 end=63020
