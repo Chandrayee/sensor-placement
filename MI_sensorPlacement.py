@@ -122,9 +122,9 @@ class Parsing(object):
 			finalData[i].append(data[i][j])
 		parsedMoteFile.write(finalData[i]+'\n')
 '''
-def distanceMatrix():
-	fyles=['data.txt','mote_locs.txt']
-	parser=Parsing(fyles)
+def distanceMatrix(locationsfile):
+	fyle=[locationsfile]
+	parser=Parsing(fyle)
 	parsedText=parser.textParsing()
 	locations=parsedText[2]
 	for i in locations.keys():
@@ -140,13 +140,10 @@ def distanceMatrix():
 	return dists
 
 
-def sampleCovariance(data):
-	return np.cov(data)
-
 
 class Kernel(object):
 
-    matrix= np.matrix(float)
+    #matrix= np.matrix(float)
     Lambda = 1
 
     def __init__(self,kernelChoice, Lambda = 1, Sigma=1, Alpha=1):
@@ -155,20 +152,20 @@ class Kernel(object):
         self.Alpha=Alpha
        	self.kernelChoice=kernelChoice
 
-    def compute_kernel_matrix(self):
-        """Computes the kernel matrix between two given x vectors, using a specified kernel"""
-        dists=distanceMatrix()
-        if self.kernelChoice=='squared exponential':
-        	sqExp=((self.Sigma)**2)*np.exp(-(1./2.)*np.square(dists)/(self.Lambda**2))
-        	return sqExp
-        elif self.kernelChoice=='matern':
-        	matern=1+(np.sqrt(5)*dists/(self.Lambda))+((5.*np.square(dists))/(3*(self.Lambda**2)))*np.exp((-np.sqrt(5)*dists)/self.Lambda)
-        	return matern
-        elif self.kernelChoice=='rational quadratic':
-        	rationalQuad=(1+((np.square(dists))/(2*self.Alpha*(self.Lambda**2))))
-        	return rationalQuad
-        elif self.kernelChoice=='sample covariance':
-        	sampleCovariance=sampleCovariance
+    def compute_kernel_matrix(self, matrix):
+		#"""Computes the kernel matrix for a set of vectors, using a specified kernel"""
+		datamatrix=matrix
+		if self.kernelChoice=='squared exponential':
+			sqExp=((self.Sigma)**2)*np.exp(-(1./2.)*np.square(datamatrix)/(self.Lambda**2))
+			return sqExp
+		elif self.kernelChoice=='matern':
+			matern=1+(np.sqrt(5)*datamatrix/(self.Lambda))+((5.*np.square(datamatrix))/(3*(self.Lambda**2)))*np.exp((-np.sqrt(5)*datamatrix)/self.Lambda)
+			return matern
+		elif self.kernelChoice=='rational quadratic':
+			rationalQuad=(1+((np.square(datamatrix))/(2*self.Alpha*(self.Lambda**2))))
+			return rationalQuad
+		elif self.kernelChoice=='sample covariance':
+			sampleCovariance=np.cov(matrix)
 
 
 
@@ -195,8 +192,8 @@ class Kernel(object):
         K = self.matrix
         return (K[ix1],K[ix2],K[ix3],K[ix4])
 
-    def store_kernel_matrix(self):
-        self.matrix = self.compute_kernel_matrix()
+    def store_kernel_matrix(self,matrix):
+        self.matrix = self.compute_kernel_matrix(matrix)
     
     def get_kernel_matrix(self):
         return self.matrix
