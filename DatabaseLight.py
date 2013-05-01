@@ -76,7 +76,7 @@ def parse(url):
     getvar = temp[3:]
     for count in range(len(getvar)):
         t=float(getvar[count][0])/1000
-        unixtime.append(getvar[count][0])
+        unixtime.append(float(getvar[count][0]))
         ttb=time.localtime(t)
         #Returns time in string format: "Wed 21 11 2012 16 45 53"
         tim=strftime("%a %d %m %Y %H %M %S",ttb)
@@ -201,6 +201,32 @@ def getSunpos(lat, lon, timezon, year, month, day, hour, minute, seconds):
     #data is saved for future reference
     return [str(eldeg), str(azdeg)]
 
+def fill_gaps(timestamp, reading, unixtime):
+    newunixtime = [round(x/300000.0)*300000.0 for x in unixtime]
+    #eliminate duplicates
+    for i in range(len(newunixtime)-1):
+        prev = newunixtime[i]
+        curr = newunixtime[i+1]
+        if (prev == curr):
+            del newunixtime[i]
+            del reading[i]
+            del timestamp[i]
+            i = i + 1
+    #fill in the gaps
+    n = unixtime[0]/300000
+    counter = 0
+    while (newunixtime[counter] < newunixtime[-1]):
+        if newunixtime[counter] + 300000 < newunixtime[counter+1]:
+            newunixtime.insert(counter + 1, (n+1)*300000)
+            t = (n+1)*300
+            ttb = time.localtime(t)
+            tim = strftime("%a %d %m %Y %H %M %S", ttb)
+            timestamp.insert(counter + 1, tim)
+            reading.insert(counter + 1, float('nan'))
+        n = n + 1
+        counter = counter + 1
+    return timestamp, reading, newunixtime
+
 def createData(sens_no, start, end, lat = "37 52 27.447",
                lon = "122 15 33.3864 W", timezon = "US/Pacific"):
     """This function adds data for BEST lab sensor SENS_NO into its
@@ -223,8 +249,11 @@ def createData(sens_no, start, end, lat = "37 52 27.447",
     url = "http://new.openbms.org/backend/api/prev/uuid/" + sensorID +\
           "?&start=" + start + "&end=" + end + "&limit=100000&"
     timestamp, reading, unixtime = parse(url)
+    # fill in the gaps in the unixtimes
+    timestamp, reading, unixtime = fill_gaps(timestamp, reading, unixtime)
     for count in range(len(reading)):
         time = timestamp[count]
+        timestamps.append(unix)
         sunpos = getSunpos(lat, lon, timezon, time[3], time[2],
                            time[1], time[4], time[5], time[6])
         cloud = cursor.execute('SELECT cloudiness FROM cloud WHERE day = ' +
@@ -239,11 +268,12 @@ def createData(sens_no, start, end, lat = "37 52 27.447",
         else:
             to_db = [unixtime[count], time[0], time[1], time[2], time[3],
                      time[4], time[5],time[6], reading[count], sunpos[0],
-                     sunpos[1], "Null", x, y]
+                     sunpos[1], "None", x, y]
         cursor.execute('INSERT OR IGNORE INTO ' + table +
                        ' VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
                        to_db)
     connection.commit()
+
 
 def createAllData(lat = "37 52 27.447", lon = "122 15 33.3864 W",
                     timezon = "US/Pacific"):
@@ -296,30 +326,6 @@ def updateData(sens_no, lat = "37 52 27.447", lon = "122 15 33.3864 W",
     print("limit is:" + str(limit))
     print("Start is:" + str(start))
     print("End is:" + str(end))
-    url = "http://new.openbms.org/backend/api/prev/uuid/" + sensorID +\
-          "?&start=" + str(start) + "&end=" + str(end) + "&limit=" +\
-          str(limit) + "&"
-    timestamp, reading, unixtime = parse(url)
-    print(len(reading))
-    for count in range(len(reading)):
-        t = timestamp[count]
-        sunpos = getSunpos(lat, lon, timezon, t[3], t[2],
-                           t[1], t[4], t[5], t[6])
-        cloud = cursor.execute('SELECT cloudiness FROM cloud WHERE day = ' +
-                               str(t[1]) + ' AND month = ' + str(t[2]) +
-                               ' AND year = ' + str(t[3]) + ' AND hour = ' +
-                               str(t[4]))
-        cloudiness = cloud.fetchone()
-        if cloudiness is not None:
-            to_db = [unixtime[count], t[0], t[1], t[2], t[3],
-                     t[4], t[5],t[6], reading[count], sunpos[0],
-                     sunpos[1], str(cloudiness[0]), x, y]
-        else:
-            to_db = [unixtime[count], t[0], t[1], t[2], t[3],
-                     t[4], t[5],t[6], reading[count], sunpos[0],
-                     sunpos[1], "Null", x, y]
-        cursor.execute('INSERT OR IGNORE INTO ' + table +
-                       ' VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
-                       to_db)
+    createData(sens_no, start, end)
     #Save your changes
     connection.commit()
