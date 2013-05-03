@@ -179,7 +179,7 @@ def createCloudData(end, start = "2012 09 07", feature = "history", station = "K
               month = "0" + month
         YYYYMMDD=str(YYYY[i])+month+day
         features=feature+"_"+YYYYMMDD
-        url="http://api.wunderground.com/api/edcc6e58a520e6ef/"+features+"/q/"+station+".json"
+        url="http://api.wunderground.com/api/f2983417df06de3a/"+features+"/q/"+station+".json"
         print(url)
         data=urllib2.urlopen(url).read()
         getdata=data.split(",")
