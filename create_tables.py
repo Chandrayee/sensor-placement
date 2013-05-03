@@ -37,10 +37,15 @@ cursor.execute('''CREATE TABLE light4 (unixtime REAL, weekday TEXT,
 
 #Create one table for cloud measurement data
 
-cursor.execute('''CREATE TABLE cloud (timezone string, year int, month int,
-                day int, hour int, minute int, seconds int, unixtime float,
-                cloudiness string, PRIMARY KEY (year, month, day, hour,
-                minute, seconds))''')
+cursor.execute('''CREATE TABLE cloud (timezone TEXT, year INTEGER, month
+                INTEGER, day INTEGER, hour INTEGER, minute INTEGER, seconds
+                INTEGER, unixtime REAL, cloudiness TEXT, PRIMARY KEY
+                (year, month, day, hour, minute, seconds))''')
+
+#Create one table for cloudiness value per day
+
+cursor.execute('''CREATE TABLE daycloud (year INTEGER, month INTEGER, day
+                INTEGER, clearcount INTEGER, PRIMARY KEY (year, month, day))''')
 
 #Save your changes
 connection.commit()

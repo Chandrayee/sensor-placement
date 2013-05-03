@@ -10,7 +10,6 @@ import urllib2
 import datetime
 import numpy as np
 import sqlite3
-import numpy as np
 from numpy import vstack
 import scipy as sp
 from scipy import stats
@@ -27,7 +26,6 @@ import pdb
 
 import sqlite3
 from sqlite3 import dbapi2 as sqlite3
-
 
 
 def make_unix_timestamp(date_string, time_string):
@@ -181,7 +179,7 @@ def createCloudData(end, start = "2012 09 07", feature = "history", station = "K
               month = "0" + month
         YYYYMMDD=str(YYYY[i])+month+day
         features=feature+"_"+YYYYMMDD
-        url="http://api.wunderground.com/api/44f02142905d4c0b/"+features+"/q/"+station+".json"
+        url="http://api.wunderground.com/api/edcc6e58a520e6ef/"+features+"/q/"+station+".json"
         print(url)
         data=urllib2.urlopen(url).read()
         getdata=data.split(",")
@@ -201,6 +199,15 @@ def createCloudData(end, start = "2012 09 07", feature = "history", station = "K
                         to_db = [x, YYYY[i], MM[i], DD[i], int(y1), int(y2), 0, unixtime, cloudiness]
                         cursor.execute('INSERT OR IGNORE INTO cloud VALUES (?,?,?,?,?,?,?,?,?)',
                                to_db)
+        # Add values to the 
+        cursor.execute('SELECT cloudiness FROM cloud WHERE day = ? AND month = ? \
+                      AND year = ?', (DD[i], MM[i], YYYY[i]))
+        numClear = 0
+        for c in cursor.fetchall():
+            if str(c[0]) == 'Clear' or str(c[0]) == 'Scattered Clouds':
+                numClear += 1
+        cursor.execute('INSERT OR IGNORE INTO daycloud VALUES (?, ?, ?, ?)', (YYYY[i], MM[i],
+                       DD[i], numClear))
     #Save your changes
     connection.commit()
 
@@ -208,7 +215,11 @@ def updateCloudData():
     connection = sqlite3.connect('data.db')
     cursor = connection.cursor()
     cursor.execute('SELECT year, month, day, MAX(unixtime) FROM cloud')
+    #cursor.execute('SELECT MAX(unixtime) FROM cloud')
     current = cursor.fetchall()[0]
+    #for i in cursor.fetchmany(2):
+     #   print i
+    #print(current)
     year = str(current[0])
     month = str(current[1])
     day = str(current[2])
@@ -219,6 +230,8 @@ def updateCloudData():
     start = year + " " + month + " " + day
     ttb = time.localtime()
     end = strftime("%Y %m %d", ttb)
+    #print(start)
+    #print(end)
     createCloudData(end, start)
 
 

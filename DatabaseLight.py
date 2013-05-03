@@ -204,24 +204,27 @@ def getSunpos(lat, lon, timezon, year, month, day, hour, minute, seconds):
 def fill_gaps(timestamp, reading, unixtime):
     newunixtime = [round(x/300000.0)*300000.0 for x in unixtime]
     #eliminate duplicates
-    for i in range(len(newunixtime)-1):
+    i = 0
+    size = len(newunixtime)
+    while i < size-1:
         prev = newunixtime[i]
         curr = newunixtime[i+1]
         if (prev == curr):
             del newunixtime[i]
             del reading[i]
             del timestamp[i]
-            i = i + 1
+            size = size - 1
+        i = i + 1
     #fill in the gaps
     n = unixtime[0]/300000
     counter = 0
     while (newunixtime[counter] < newunixtime[-1]):
         if newunixtime[counter] + 300000 < newunixtime[counter+1]:
             newunixtime.insert(counter + 1, (n+1)*300000)
-            t = (n+1)*300
+            t = float((n+1)*300)
             ttb = time.localtime(t)
             tim = strftime("%a %d %m %Y %H %M %S", ttb)
-            timestamp.insert(counter + 1, tim)
+            timestamp.insert(counter + 1, tim.split())
             reading.insert(counter + 1, float('nan'))
         n = n + 1
         counter = counter + 1
@@ -253,7 +256,7 @@ def createData(sens_no, start, end, lat = "37 52 27.447",
     timestamp, reading, unixtime = fill_gaps(timestamp, reading, unixtime)
     for count in range(len(reading)):
         time = timestamp[count]
-        timestamps.append(unix)
+        print(time)
         sunpos = getSunpos(lat, lon, timezon, time[3], time[2],
                            time[1], time[4], time[5], time[6])
         cloud = cursor.execute('SELECT cloudiness FROM cloud WHERE day = ' +
