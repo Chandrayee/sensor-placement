@@ -28,7 +28,6 @@ class Parsing(object):
 			rawData=open(fyle) 
 			for line in rawData:
 				lineAsList=line.split() #make list of individual strings in line
-				#print lineAsList
 				if fyle=='data.txt':
 					#date=lineAsList[0]
 					#time=lineAsList[1]
@@ -92,8 +91,9 @@ class Parsing(object):
 				if not readings[1] in badIndicesList:
 					if moteNum not in finalData:
 						finalData[moteNum]=[]
-					finalData[moteNum].append((readings[0],readings[1]))
-			datafile.write(str((moteNum, locations[moteNum],finalData[moteNum]))+'\n')
+					finalData[moteNum].append(readings[0])
+			print locations[moteNum]
+			datafile.write(str(moteNum)+str(locations[moteNum])+str(finalData[moteNum])+'\n')
 
 
 		
@@ -122,14 +122,11 @@ class Parsing(object):
 			finalData[i].append(data[i][j])
 		parsedMoteFile.write(finalData[i]+'\n')
 '''
-def distanceMatrix(locationsfile):
-	fyle=[locationsfile]
-	parser=Parsing(fyle)
-	parsedText=parser.textParsing()
-	locations=parsedText[2]
-	for i in locations.keys():
+def distanceMatrix(locationsvec):
+	locations=locationsvec
+	for i in locations:
 		tempDistVec=[]
-		for j in locations.keys():
+		for j in locations:
 			Norm=(np.linalg.norm(locations[i]-locations[j]))
 			tempDistVec.append(Norm)
 		tempDistArray=np.array([tempDistVec]) #create a row of distances
@@ -165,7 +162,8 @@ class Kernel(object):
 			rationalQuad=(1+((np.square(datamatrix))/(2*self.Alpha*(self.Lambda**2))))
 			return rationalQuad
 		elif self.kernelChoice=='sample covariance':
-			sampleCovariance=np.cov(matrix)
+			sampleCovariance=np.cov(datamatrix)
+			return sampleCovariance
 
 
 
@@ -244,6 +242,38 @@ def maxMutualInformation(k, cov_V_V, S, U):
 		candidate_values=[]
 	return A
 
+
+def greedyVariance(k, cov_V_V, S, U):
+	A=set() #initialize set of optimally placed sensors A
+	#a "sensor" here corresponds to the INDEX of the sensor
+	V=S|U
+	candidate_values=[]
+
+	for i in range(k):
+		A_indices=sorted(A)
+		if not len(A)==0:
+			cov_A_A=np.vstack([cov_V_V[a,[A_indices]] for a in A_indices]) #make sure this stacks right
+			inv_cov_A_A=np.linalg.inv(cov_A_A)
+		else:
+			cov_A_A=0
+			inv_cov_A_A=0
+		for y in S-A:
+			var_y=cov_V_V[y,y] #moteNums start from 0
+			if not len(A)==0:
+				cov_y_A=np.array([[cov_V_V[y,a] for a in A_indices]])
+				cov_A_y=cov_y_A.T
+			else:
+				cov_y_A=0
+				cov_A_y=0
+			condVar_y_A=var_y-np.dot(cov_y_A, np.dot(inv_cov_A_A,cov_A_y))
+			value=condVar_y_A
+			candidate_values.append(value)
+			best_value=max(candidate_values)
+			if best_value==value:
+				y_star=y
+		A.add(y_star)
+		candidate_values=[]
+	return A
 
 
 
