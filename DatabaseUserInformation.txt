@@ -23,6 +23,10 @@ Run python.exe . DatabaseSizeSummary.py data.db within the Gitshell
 This time the colums and rows of the cloud table should have values because data has been inserted. 
 
 Note : If the data does not enter, there could be a problem with overusage of the wunderground key. 
+Error Message: If you see this error, URLError: <urlopen error [Errno 10060]
+A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond>
+THIS MEANS THAT THE KEY NEEDS TO BE REGENERATED! Go to the Wunderground website, Key settings, and then regenerate key! 
+
 
 3. Now, we can insert the light data from the sensors into the Database. 
 
